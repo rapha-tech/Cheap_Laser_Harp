@@ -29,6 +29,7 @@ static tsf* g_TinySoundFont;
 // A Mutex so we don't call note_on/note_off while rendering audio samples
 static ma_mutex g_Mutex;
 
+// The main window
 MainWindow* window;
 
 int instrument_chosen = 0;
@@ -49,9 +50,11 @@ bool chooseMidiPort( RtMidiIn *rtmidi );
 
 void midiInCallback( double deltatime, vector<unsigned char> *message, void *userData )
 {
-    instrument_chosen = window->get_chosen_instrument();
+    instrument_chosen = window->get_chosen_instrument(); // FIXME : might be a bit unecessary to poll it every time
+
     // http://midi.teragonaudio.com/tech/midispec/noteon.htm
     // http://midi.teragonaudio.com/tech/midispec/noteoff.htm
+
     unsigned int nBytes = message->size();
     if(nBytes == 3)
     {
@@ -61,7 +64,7 @@ void midiInCallback( double deltatime, vector<unsigned char> *message, void *use
             window->set_bar(message->at(DATA_BYTE_O)-60, 1);
             ma_mutex_lock(&g_Mutex);
             tsf_note_on(g_TinySoundFont, instrument_chosen, message->at(DATA_BYTE_O), 1.0f);
-            //tsf_note_on(g_TinySoundFont, INSTRUMENT, message->at(DATA_BYTE_O), (float)(message->at(DATA_BYTE_1)/127));
+            //tsf_note_on(g_TinySoundFont, instrument_chosen, message->at(DATA_BYTE_O), (float)(message->at(DATA_BYTE_1)/127)); // this is with velocity
             ma_mutex_unlock(&g_Mutex);
         }
         else if (message->at(STATUS_BYTE) == NOTE_OFF_CHAN_O)
@@ -80,7 +83,7 @@ void midiInCallback( double deltatime, vector<unsigned char> *message, void *use
 
 int main(int argc, char *argv[])
 {
-    // setting up the window early on to display error messages
+    // set up the window early on to display error messages
     QApplication a(argc, argv);
     window = new MainWindow;
     window->show();
@@ -103,6 +106,7 @@ int main(int argc, char *argv[])
     }
 
     // Load the SoundFont from a file
+    // TODO : use a file picker in the UI
     g_TinySoundFont = tsf_load_filename("florestan-subset.sf2");
     if (!g_TinySoundFont)
     {
@@ -125,17 +129,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // print the differents instruments available in the soundfont
+    // print the differents instruments available in the soundfont in the UI
     for (int i = 0; i < tsf_get_presetcount(g_TinySoundFont); i++)
-    {
         window->add_instrument(tsf_get_presetname(g_TinySoundFont, i));
-    }
 
 
     // set up the midi part
     RtMidiIn *midiin = new RtMidiIn();
 
     // Call function to select port.
+    // TODO : integrate a device picker in the UI
     if (chooseMidiPort( midiin ) == false)
     {
         delete midiin;
@@ -153,7 +156,6 @@ int main(int argc, char *argv[])
     cout << "\nReading MIDI input ...\n";
 
     QCoreApplication::exec();
-
 
     delete midiin;
     ma_device_uninit(&device);
@@ -178,7 +180,7 @@ bool chooseMidiPort( RtMidiIn *rtmidi )
         cout << "Input port #" << i << ": " << portName << '\n';
     }
 
-    rtmidi->openPort(0);
+    rtmidi->openPort(0); // TODO : integrate a choose function in the UI
 
     return true;
 }

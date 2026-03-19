@@ -9,8 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    scene = new QGraphicsScene;
-    ui->graphicsView->setScene(scene);
+    scene_bars = new QGraphicsScene;
+    ui->graphicsView->setScene(scene_bars);
     draw_bars();
 
     QGraphicsScene *scene_piano = new QGraphicsScene;
@@ -35,7 +35,7 @@ void MainWindow::draw_bars()
 
     for(int i = 0; i<N_LASERS; i++)
     {
-        pRects[i] = scene->addRect(QRectF(i * SPACE, 0, 10, 200), QPen(Qt::NoPen), QBrush(Qt::red)); // QPen for border, QBrush for fill
+        pRects[i] = scene_bars->addRect(QRectF(i * SPACE, 0, 10, 200), QPen(Qt::NoPen), QBrush(Qt::red)); // QPen for border, QBrush for fill
     }
 }
 

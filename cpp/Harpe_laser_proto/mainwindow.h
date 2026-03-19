@@ -30,7 +30,7 @@ public:
     void set_bar(int bar_id, bool state);
 
 private:
-    QGraphicsScene* scene;
+    QGraphicsScene* scene_bars;
     QGraphicsRectItem** pRects;
     Ui::MainWindow *ui;
     Piano_ui* piano;
