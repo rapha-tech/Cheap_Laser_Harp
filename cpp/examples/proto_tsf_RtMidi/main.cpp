@@ -4,6 +4,8 @@ Programme de test de la génération du son à partir des commandes reçues en m
 
 https://caml.music.mcgill.ca/~gary/rtmidi/index.html#compiling
 
+cd cpp\examples\proto_tsf_RtMidi
+
 sur linux il faut installer les lib alsa pour developpeur
 command pour build sur linux : g++ -Wall -D__LINUX_ALSA__ -o main main.cpp lib/RtMidi.cpp -lasound -lpthread
 command pour build sur windows : g++ -Wall -D__WINDOWS_MM__ -o main main.cpp lib/RtMidi.cpp -lwinmm
