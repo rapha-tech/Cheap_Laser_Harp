@@ -50,10 +50,15 @@ else()
 endif()
 
 target_link_libraries(Harpe_laser_proto PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(Harpe_laser_proto PRIVATE winmm)
 target_compile_options(Harpe_laser_proto PRIVATE -Wall)
-target_compile_definitions(Harpe_laser_proto PRIVATE __WINDOWS_MM__)
 
+if(WIN32)
+    target_compile_definitions(Harpe_laser_proto PRIVATE __WINDOWS_MM__)
+    target_link_libraries(Harpe_laser_proto PRIVATE winmm)
+elseif(UNIX AND NOT APPLE)
+    target_compile_definitions(Harpe_laser_proto PRIVATE __LINUX_ALSA__)
+    target_link_libraries(Harpe_laser_proto PRIVATE pthread asound)
+endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
