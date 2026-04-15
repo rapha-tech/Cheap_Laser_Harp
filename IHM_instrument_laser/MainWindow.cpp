@@ -104,6 +104,24 @@ MainWindow::MainWindow(QWidget *parent)
     QMenu *mInstrument = menuBar()->addMenu("&Instrument");
     mInstrument->addAction("&Importer SF2...");
 
+    QMenu *mListePeripheriques = menuBar()->addMenu("&Peripheriques");
+    // On ajouter les périphériques disponibles (connectés au PC)
+    m_engine->stopMidi();
+    QStringList ListePorts = m_engine->getMidiPorts();
+
+    if(ListePorts.size() > 0)
+    {
+        for(unsigned int i = 0; i < ListePorts.size(); i++)
+            mListePeripheriques->addAction(ListePorts[i]);
+    }
+    else
+    {
+        mListePeripheriques->addAction("&Aucun peripherique compatible");
+    }
+
+
+    mInstrument->addMenu(mListePeripheriques);
+
     QMenu *mLasers = menuBar()->addMenu("&Lasers");
     QAction *reinitialiser = new QAction("&Reinitialiser les assignations", this);
     mLasers->addAction(reinitialiser);
@@ -143,7 +161,7 @@ MainWindow::MainWindow(QWidget *parent)
     root->setSpacing(10);
 
     QWidget *leftPanel = new QWidget();
-    leftPanel->setFixedWidth(160);
+    //leftPanel->setFixedWidth(160);
     QVBoxLayout *left = new QVBoxLayout(leftPanel);
     left->setContentsMargins(0, 0, 0, 0);
     left->setSpacing(6);
@@ -227,7 +245,8 @@ MainWindow::MainWindow(QWidget *parent)
         colL->setAlignment(Qt::AlignHCenter);
 
         QFrame *barre = new QFrame();
-        barre->setFixedSize(12, 100);
+        barre->setMinimumHeight(100);
+        barre->setFixedWidth(12);
         barre->setStyleSheet("background-color: #222; border-radius: 5px;");
         m_barres[i - 1] = barre;
 
@@ -253,8 +272,8 @@ MainWindow::MainWindow(QWidget *parent)
         m_btnLaser[i - 1] = btn;
 
         QPushButton *assignBtn = new QPushButton(NOTES_BLANCHES[i - 1]);
-        assignBtn->setFixedHeight(28);
-        assignBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        assignBtn->setMinimumHeight(28);
+        btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         assignBtn->setStyleSheet(
             "QPushButton { background-color: #222; border-radius: 4px;"
             "  border: 1px solid #444; color: #aaa; font-size: 11px; }"
@@ -265,9 +284,9 @@ MainWindow::MainWindow(QWidget *parent)
         });
         m_btnAssign[i - 1] = assignBtn;
 
-        colL->addWidget(barre,     0, Qt::AlignHCenter);
-        colL->addWidget(btn);
-        colL->addWidget(assignBtn);
+        colL->addWidget(barre, 50, Qt::AlignHCenter);
+        colL->addWidget(btn, 30);
+        colL->addWidget(assignBtn, 20);
         laserRow->addWidget(col);
     }
 
@@ -281,10 +300,9 @@ MainWindow::MainWindow(QWidget *parent)
         "Activer un bouton d'assignation puis cliquer une touche - Les touches sont cliquables"
         );
     pianoHint->setStyleSheet("font-size: 10px; color: #888;");
-    pianoVBox->addWidget(pianoHint);
 
     m_pianoWidget = new QWidget();
-    m_pianoWidget->setFixedHeight(120);
+    m_pianoWidget->setMinimumHeight(120);
     m_pianoWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     QHBoxLayout *pianoLay = new QHBoxLayout(m_pianoWidget);
@@ -335,13 +353,14 @@ MainWindow::MainWindow(QWidget *parent)
         });
     }
 
+    pianoVBox->addWidget(pianoHint);
     pianoVBox->addWidget(m_pianoWidget);
 
-    centerLayout->addWidget(laserZone,  1);
-    centerLayout->addWidget(pianoZone,  0);
+    centerLayout->addWidget(laserZone);
+    centerLayout->addWidget(pianoZone);
 
-    root->addWidget(leftPanel);
-    root->addWidget(center);
+    root->addWidget(leftPanel, 20);
+    root->addWidget(center, 80);
 
     // ── Connexions ──
     connect(m_choixInstrument, &QComboBox::currentTextChanged,

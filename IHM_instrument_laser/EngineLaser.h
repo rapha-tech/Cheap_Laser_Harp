@@ -35,6 +35,7 @@ public:
     // MIDI
     bool initMidi();
     void stopMidi();
+    QStringList getMidiPorts();
 
     // Utilitaire
     int  midiNoteForLaser(int laserId);

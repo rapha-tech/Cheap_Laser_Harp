@@ -221,6 +221,28 @@ bool EngineLaser::initMidi()
     }
 }
 
+QStringList EngineLaser::getMidiPorts()
+{
+    QStringList liste;
+    m_midiIn = new RtMidiIn();
+
+    unsigned int nPorts = m_midiIn->getPortCount();
+
+    if (nPorts == 0) {
+        delete m_midiIn;
+        m_midiIn = nullptr;
+        return liste;
+    }
+
+    for (unsigned int i = 0; i < nPorts; i++)
+        liste << QString::fromStdString(m_midiIn->getPortName(i));
+
+    delete m_midiIn;
+    m_midiIn = nullptr;
+
+    return liste;
+}
+
 void EngineLaser::stopMidi()
 {
     if (m_midiIn) {
