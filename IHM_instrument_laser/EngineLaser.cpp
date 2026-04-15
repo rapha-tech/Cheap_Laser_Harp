@@ -80,26 +80,15 @@ void EngineLaser::audioCallback(ma_device* dev, void* out,
 }
 
 // ─────────────────────────────────────────────
-void EngineLaser::chargerInstrument(const QString &nomInstrument)
+void EngineLaser::chargerInstrument(int idInstrument)
 {
     if (!m_tsf) return;
 
-    bool ok;
-    int idx = nomInstrument.split(" - ").first().trimmed().toInt(&ok);
-    if (ok && idx >= 0 && idx < tsf_get_presetcount(m_tsf)) {
-        m_instrument = idx;
-        qDebug() << "Instrument:" << nomInstrument;
+    if (idInstrument < tsf_get_presetcount(m_tsf)) {
+        tsf_note_off_all(m_tsf);
+        // mute all sound before changing instrument
+        m_instrument = idInstrument;
         return;
-    }
-    // Fallback recherche par nom
-    int count = tsf_get_presetcount(m_tsf);
-    for (int i = 0; i < count; i++) {
-        QString name = QString(tsf_get_presetname(m_tsf, i)).toLower();
-        if (name.contains(nomInstrument.toLower())) {
-            m_instrument = i;
-            qDebug() << "Instrument trouvé par nom:" << i << name;
-            return;
-        }
     }
     m_instrument = 0;
     qDebug() << "Instrument non trouvé, fallback 0";

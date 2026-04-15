@@ -18,6 +18,7 @@
 #include <QAction>
 
 
+
 const QStringList MainWindow::NOTES_BLANCHES = {
     "Do","Re","Mi","Fa","Sol","La","Si",
     "Do","Re","Mi","Fa","Sol"
@@ -170,7 +171,7 @@ MainWindow::MainWindow(QWidget *parent)
     titre->setStyleSheet("font-weight: bold; color: #00BFFF;");
     left->addWidget(titre);
 
-    m_choixInstrument = new QComboBox();
+    m_choixInstrument = new QListWidget;
     left->addWidget(m_choixInstrument);
 
     left->addWidget(new QLabel("Volume"));
@@ -363,7 +364,7 @@ MainWindow::MainWindow(QWidget *parent)
     root->addWidget(center, 80);
 
     // ── Connexions ──
-    connect(m_choixInstrument, &QComboBox::currentTextChanged,
+    connect(m_choixInstrument, &QListWidget ::currentRowChanged,
             m_engine, &EngineLaser::chargerInstrument);
 
     connect(sliderVol, &QSlider::valueChanged, this, [=](int val) {
@@ -390,7 +391,7 @@ MainWindow::MainWindow(QWidget *parent)
         m_choixInstrument->addItems({"0 - Piano"});
     }
 
-    m_engine->chargerInstrument(m_choixInstrument->currentText());
+    m_engine->chargerInstrument(m_choixInstrument->currentRow());
     m_engine->setVolume(0.8f);
     m_engine->initMidi();
 

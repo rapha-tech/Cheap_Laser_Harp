@@ -17,7 +17,7 @@ public:
     ~EngineLaser();
 
     // Instrument
-    void         chargerInstrument(const QString &nomInstrument);
+    void         chargerInstrument(int idInstrument);
     QStringList  getInstrumentsDisponibles() const;
 
     // Notes lasers

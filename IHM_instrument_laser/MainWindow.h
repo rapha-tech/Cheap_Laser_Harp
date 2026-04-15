@@ -11,6 +11,7 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
+#include <QListWidget>
 #include "EngineLaser.h"
 
 class MainWindow : public QMainWindow {
@@ -54,7 +55,7 @@ private:
     QMap<int, bool> m_laserNoteEstNoire;
     int m_laserEnAssignation;
 
-    QComboBox* m_choixInstrument;
+    QListWidget* m_choixInstrument;
     QVector<QLabel*> m_labelsNotes;
 
     EngineLaser* m_engine;
