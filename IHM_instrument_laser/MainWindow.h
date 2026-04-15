@@ -13,6 +13,7 @@
 #include <QAction>
 #include <QListWidget>
 #include "EngineLaser.h"
+#include "configFile.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -60,6 +61,7 @@ private:
     QVector<QLabel*> m_labelsNotes;
 
     EngineLaser* m_engine;
+    configFile* m_configFile;
 
     static const QStringList NOTES_BLANCHES;
     static const QStringList NOTES_NOIRES;

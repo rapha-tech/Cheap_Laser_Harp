@@ -3,6 +3,7 @@ QT += core gui widgets
 CONFIG += c++17
 
 SOURCES += \
+    configFile.cpp \
     main.cpp \
     MainWindow.cpp \
     EngineLaser.cpp \
@@ -12,6 +13,7 @@ SOURCES += \
 HEADERS += \
     MainWindow.h \
     EngineLaser.h \
+    configFile.h \
     lib/RtMidi.h \
     lib/tsf.h \
     lib/miniaudio.h \

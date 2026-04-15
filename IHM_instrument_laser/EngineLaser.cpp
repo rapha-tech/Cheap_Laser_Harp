@@ -15,7 +15,7 @@ static const int MIDI_BLANC[] = {0,2,4,5,7,9,11,12,14,16,17,19};
 // Noires   : Do# Re# -  Fa# Sol# La# -  Do# Re# -  Fa# -
 static const int MIDI_NOIR[]  = {1,3,-1,6,8,10,-1,13,15,-1,18,-1};
 
-EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
+EngineLaser::EngineLaser(QObject *parent, char* soundFontPath) : QObject(parent)
 {
     // Assignation par défaut : laser i → note i-1 (Do, Re, Mi, Fa, Sol, La)
     for (int i = 1; i <= 6; i++)
@@ -37,9 +37,13 @@ EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
     ma_mutex_init(&m_mutex);
 
     // ── Charger le SoundFont ──
-    m_tsf = tsf_load_filename("florestan-subset.sf2");
+    if(soundFontPath != nullptr)
+        m_tsf = tsf_load_filename(soundFontPath);
+    else
+        m_tsf = tsf_load_filename("florestan-subset.sf2");
+
     if (!m_tsf) {
-        qWarning() << "EngineLaser: florestan-subset.sf2 introuvable !";
+        qWarning() << "EngineLaser: SoundFont introuvable !";
         qWarning() << "Placez le fichier dans le dossier de build.";
         ma_device_uninit(&m_device);
         return;
@@ -180,7 +184,7 @@ void EngineLaser::setVolume(float niveau)
 }
 
 // ─────────────────────────────────────────────
-bool EngineLaser::initMidi(int id)
+bool EngineLaser::initMidi(unsigned int id)
 {
     try {
         m_midiIn = new RtMidiIn();
@@ -191,12 +195,14 @@ bool EngineLaser::initMidi(int id)
             m_midiIn = nullptr;
             return false;
         }
+        if(id > nPorts)
+            id = 0;
 
         m_midiIn->openPort(id);
         m_midiIn->setCallback(&EngineLaser::midiCallback, this);
         m_midiIn->ignoreTypes(false, false, false);
         qDebug() << "MIDI ouvert:"
-                 << QString::fromStdString(m_midiIn->getPortName(0));
+                 << QString::fromStdString(m_midiIn->getPortName(id));
         return true;
 
     } catch (RtMidiError &e) {

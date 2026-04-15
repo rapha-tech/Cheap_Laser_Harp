@@ -13,7 +13,7 @@
 class EngineLaser : public QObject {
     Q_OBJECT
 public:
-    explicit EngineLaser(QObject *parent = nullptr);
+    explicit EngineLaser(QObject *parent = nullptr, char* = nullptr);
     ~EngineLaser();
 
     // Instrument
@@ -34,7 +34,7 @@ public:
     void setVolume(float niveau);
 
     // MIDI
-    bool initMidi(int id = 0);
+    bool initMidi(unsigned int id = 0);
     void stopMidi();
     QStringList getMidiPorts();
 

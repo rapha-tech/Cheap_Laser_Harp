@@ -1,0 +1,10 @@
+{
+  "soundfont_path": "florestan-subset.sf2",
+  "instrument_id": 2,
+  "volume_level": 100,
+  "Midi_port_id": 0,
+  "notes_laser_0": [
+    53,
+    55
+  ]
+}

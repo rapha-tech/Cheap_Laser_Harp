@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "EngineLaser.h"
+#include "configFile.h"
 
 #include <QPushButton>
 #include <QSlider>
@@ -77,7 +78,17 @@ MainWindow::MainWindow(QWidget *parent)
 {
     //this->setStyleSheet("QWidget { background-image: url(:/1.png); }");
     //this->setStyleSheet("MainWindow { background-image: url(:/1.png); }");
-    m_engine = new EngineLaser(this);
+
+    // load config file
+    m_configFile = new configFile("config.json");
+
+    // get settings
+    char* soundFontPath = m_configFile->get_soundFont_path();
+    int instrumentId = m_configFile->get_instr_id();
+    int volume = m_configFile->get_volume();
+    int port_id = m_configFile->get_port_id();
+
+    m_engine = new EngineLaser(this, soundFontPath);
 
     for (int i = 1; i <= 6; i++) {
         m_laserNote[i]         = i - 1;
@@ -176,7 +187,6 @@ MainWindow::MainWindow(QWidget *parent)
     left->addWidget(new QLabel("Volume"));
     QSlider *sliderVol = new QSlider(Qt::Horizontal);
     sliderVol->setRange(0, 100);
-    sliderVol->setValue(80);
     left->addWidget(sliderVol);
 
     left->addSpacing(8);
@@ -380,12 +390,17 @@ MainWindow::MainWindow(QWidget *parent)
                 }
             });
 
-    QString filename = "florestan-subset.sf2";
+    // apply previously loaded settings
+    QString filename = QString(soundFontPath);
     updateListInstruments(filename);
 
-    m_engine->chargerInstrument(m_choixInstrument->currentRow());
-    m_engine->setVolume(0.8f);
-    m_engine->initMidi();
+    m_choixInstrument->setCurrentRow(instrumentId);
+    m_engine->chargerInstrument(instrumentId);
+
+    sliderVol->setValue(volume);
+    m_engine->setVolume(volume / 100.0f);
+
+    m_engine->initMidi(port_id);
 
     setCentralWidget(central);
     setWindowTitle("Instrument Laser");
