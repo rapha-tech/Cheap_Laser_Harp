@@ -6,14 +6,16 @@ SOURCES += \
     main.cpp \
     MainWindow.cpp \
     EngineLaser.cpp \
-    lib/RtMidi.cpp
+    lib/RtMidi.cpp \
+    lib/yyjson.c
 
 HEADERS += \
     MainWindow.h \
     EngineLaser.h \
     lib/RtMidi.h \
     lib/tsf.h \
-    lib/miniaudio.h
+    lib/miniaudio.h \
+    lib/yyjson.h
 
 RC_FILE = app.rc
 
