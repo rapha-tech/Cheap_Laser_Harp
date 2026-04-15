@@ -191,7 +191,7 @@ void EngineLaser::setVolume(float niveau)
 }
 
 // ─────────────────────────────────────────────
-bool EngineLaser::initMidi()
+bool EngineLaser::initMidi(int id)
 {
     try {
         m_midiIn = new RtMidiIn();
@@ -202,12 +202,8 @@ bool EngineLaser::initMidi()
             m_midiIn = nullptr;
             return false;
         }
-        qDebug() << "Ports MIDI :";
-        for (unsigned int i = 0; i < nPorts; i++)
-            qDebug() << " " << i << ":"
-                     << QString::fromStdString(m_midiIn->getPortName(i));
 
-        m_midiIn->openPort(0);
+        m_midiIn->openPort(id);
         m_midiIn->setCallback(&EngineLaser::midiCallback, this);
         m_midiIn->ignoreTypes(false, false, false);
         qDebug() << "MIDI ouvert:"
@@ -224,21 +220,21 @@ bool EngineLaser::initMidi()
 QStringList EngineLaser::getMidiPorts()
 {
     QStringList liste;
-    m_midiIn = new RtMidiIn();
+    RtMidiIn* midiIn = new RtMidiIn();
 
-    unsigned int nPorts = m_midiIn->getPortCount();
+    unsigned int nPorts = midiIn->getPortCount();
 
     if (nPorts == 0) {
-        delete m_midiIn;
-        m_midiIn = nullptr;
+        delete midiIn;
+        midiIn = nullptr;
         return liste;
     }
 
     for (unsigned int i = 0; i < nPorts; i++)
-        liste << QString::fromStdString(m_midiIn->getPortName(i));
+        liste << QString::fromStdString(midiIn->getPortName(i));
 
-    delete m_midiIn;
-    m_midiIn = nullptr;
+    delete midiIn;
+    midiIn = nullptr;
 
     return liste;
 }

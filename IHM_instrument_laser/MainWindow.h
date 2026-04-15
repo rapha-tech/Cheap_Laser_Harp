@@ -31,11 +31,16 @@ private slots:
     void assignerNoteLaser(int noteIndex, bool estNoire);
     void nouveau();
     void actif();
+    void loadSF2();
+    void connectMidi(int id);
+    void updatePorts();
 
 private:
     void repositionnerTouchesNoires();
     void surlignerToucheAssignee(int laserId);
     void resetStylePiano();
+
+    QMenu *mListePeripheriques;
 
     QVector<QFrame*> m_barres;
     QVector<QPushButton*> m_btnLaser;

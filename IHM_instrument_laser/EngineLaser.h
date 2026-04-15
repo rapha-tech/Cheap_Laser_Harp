@@ -33,7 +33,7 @@ public:
     void setVolume(float niveau);
 
     // MIDI
-    bool initMidi();
+    bool initMidi(int id = 0);
     void stopMidi();
     QStringList getMidiPorts();
 

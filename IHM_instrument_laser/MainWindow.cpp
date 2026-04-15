@@ -94,33 +94,33 @@ MainWindow::MainWindow(QWidget *parent)
     mFichier->addAction("&Enregistrer");
     mFichier->addSeparator();
 
-
-
     QAction *actionQuitter = new QAction("&Quitter", this);
     mFichier->addAction(actionQuitter);
     actionQuitter->setShortcut(QKeySequence(tr("Ctrl + Q")));
     connect(actionQuitter, SIGNAL(triggered()), this, SLOT(close()));
 
-    QMenu *mInstrument = menuBar()->addMenu("&Instrument");
-    mInstrument->addAction("&Importer SF2...");
 
-    QMenu *mListePeripheriques = menuBar()->addMenu("&Peripheriques");
-    // On ajouter les périphériques disponibles (connectés au PC)
-    m_engine->stopMidi();
-    QStringList ListePorts = m_engine->getMidiPorts();
 
-    if(ListePorts.size() > 0)
-    {
-        for(unsigned int i = 0; i < ListePorts.size(); i++)
-            mListePeripheriques->addAction(ListePorts[i]);
-    }
-    else
-    {
-        mListePeripheriques->addAction("&Aucun peripherique compatible");
-    }
+    QMenu *mInstrument = new QMenu("&Instrument");
 
+    QAction *actionSF2 = new QAction("&Importer SF2...", this);
+    mInstrument->addAction(actionSF2);
+    connect(actionnv, SIGNAL(triggered()), this, SLOT(loadSF2()));
+
+
+    mListePeripheriques = new QMenu("&Peripheriques");
+
+    updatePorts();
 
     mInstrument->addMenu(mListePeripheriques);
+
+    // this action is used to update the list of available Midi ports
+    QAction *actionInstr = menuBar()->addMenu(mInstrument);
+    connect(actionInstr, &QAction::hovered, this, [=]() { // FIXME : use triggered instead of hovered
+        updatePorts();
+    });
+
+
 
     QMenu *mLasers = menuBar()->addMenu("&Lasers");
     QAction *reinitialiser = new QAction("&Reinitialiser les assignations", this);
@@ -455,7 +455,6 @@ void MainWindow::repositionnerTouchesNoires() {
     }
 }
 
-//
 void MainWindow::resetStylePiano() {
     for (auto t : m_touchesBlanches) t->setStyleSheet(S_BLANCHE);
     for (auto t : m_touchesNoires)   t->setStyleSheet(S_NOIRE);
@@ -557,4 +556,43 @@ void MainWindow::nouveau() {
 
 void MainWindow::actif() {
     this->show();
+}
+
+void MainWindow::loadSF2()
+{
+
+}
+
+void MainWindow::connectMidi(int id)
+{
+    m_engine->stopMidi();
+    m_engine->initMidi(id);
+}
+
+void MainWindow::updatePorts()
+{
+    if(!mListePeripheriques->isEmpty())
+    {
+        mListePeripheriques->clear();
+    }
+
+    // On ajouter les périphériques disponibles (connectés au PC)
+    QStringList ListePorts = m_engine->getMidiPorts();
+
+    if(ListePorts.size() > 0)
+    {
+
+        for(unsigned int i = 0; i < ListePorts.size(); i++)
+        {
+            QAction* actionsPort = new QAction(ListePorts[i], this);
+            mListePeripheriques->addAction(actionsPort);
+            connect(actionsPort, &QAction::triggered, this, [=]() {
+                connectMidi(i);
+            });
+        }
+    }
+    else
+    {
+        mListePeripheriques->addAction("&Aucun peripherique compatible");
+    }
 }
