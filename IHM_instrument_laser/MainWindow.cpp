@@ -104,7 +104,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QMenu *mInstrument = new QMenu("&Instrument");
 
-    QAction *actionSF2 = new QAction("&Importer SF2...", this);
+    QAction *actionSF2 = new QAction("&Charger SoundFont", this);
     mInstrument->addAction(actionSF2);
     connect(actionSF2, SIGNAL(triggered()), this, SLOT(loadSF2()));
 
@@ -115,12 +115,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     mInstrument->addMenu(mListePeripheriques);
 
-    // this action is used to update the list of available Midi ports
+    // this action is used to update the list of available Midi ports when the menu bar is triggered
     menuBar()->addMenu(mInstrument);
     connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
         updatePorts();
     });
-
 
 
     QMenu *mLasers = menuBar()->addMenu("&Lasers");
@@ -162,7 +161,7 @@ MainWindow::MainWindow(QWidget *parent)
     root->setSpacing(10);
 
     QWidget *leftPanel = new QWidget();
-    //leftPanel->setFixedWidth(160);
+    leftPanel->setMinimumWidth(160);
     QVBoxLayout *left = new QVBoxLayout(leftPanel);
     left->setContentsMargins(0, 0, 0, 0);
     left->setSpacing(6);
@@ -172,7 +171,7 @@ MainWindow::MainWindow(QWidget *parent)
     left->addWidget(titre);
 
     m_choixInstrument = new QListWidget;
-    left->addWidget(m_choixInstrument);
+    left->addWidget(m_choixInstrument, 70); // this is to "fill" the left panel with Qlist elements
 
     left->addWidget(new QLabel("Volume"));
     QSlider *sliderVol = new QSlider(Qt::Horizontal);
@@ -368,7 +367,7 @@ MainWindow::MainWindow(QWidget *parent)
             m_engine, &EngineLaser::chargerInstrument);
 
     connect(sliderVol, &QSlider::valueChanged, this, [=](int val) {
-        m_engine->setVolume(val / 100.0f);
+        m_engine->setVolume(val / 100.0f); // TODO : use logarithmic scale
     });
 
     connect(m_engine, &EngineLaser::noteRecueMidi,
@@ -589,7 +588,6 @@ void MainWindow::updatePorts()
 
     if(ListePorts.size() > 0)
     {
-
         for(unsigned int i = 0; i < ListePorts.size(); i++)
         {
             QAction* actionsPort = new QAction(ListePorts[i], this);

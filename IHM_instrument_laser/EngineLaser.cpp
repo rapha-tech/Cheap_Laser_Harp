@@ -266,7 +266,8 @@ void EngineLaser::midiCallback(double /*dt*/,
 
 void EngineLaser::loadSoundFont(QString& fileName)
 {
-    // ── Charger le SoundFont ──
+    tsf_close(m_tsf); // Free the memory used by the current SoundFont
+
     m_tsf = tsf_load_filename(fileName.toLocal8Bit().constData());
     if (!m_tsf) {
         qWarning() << "EngineLaser: SoundFont introuvable !";
