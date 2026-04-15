@@ -263,3 +263,15 @@ void EngineLaser::midiCallback(double /*dt*/,
         emit self->noteRecueMidi(note, false);
     }
 }
+
+void EngineLaser::loadSoundFont(QString& fileName)
+{
+    // ── Charger le SoundFont ──
+    m_tsf = tsf_load_filename(fileName.toLocal8Bit().constData());
+    if (!m_tsf) {
+        qWarning() << "EngineLaser: SoundFont introuvable !";
+        qWarning() << "Chargement du fichier par default.";
+        m_tsf = tsf_load_filename("florestan-subset.sf2");
+        return;
+    }
+}

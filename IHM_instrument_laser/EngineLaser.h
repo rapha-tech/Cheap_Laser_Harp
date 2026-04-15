@@ -19,6 +19,7 @@ public:
     // Instrument
     void         chargerInstrument(int idInstrument);
     QStringList  getInstrumentsDisponibles() const;
+    void loadSoundFont(QString&);
 
     // Notes lasers
     void setNoteIndex(int laserId, int noteIndex, bool estNoire);

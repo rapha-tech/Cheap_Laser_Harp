@@ -35,6 +35,7 @@ private slots:
     void loadSF2();
     void connectMidi(int id);
     void updatePorts();
+    void updateListInstruments(QString&);
 
 private:
     void repositionnerTouchesNoires();

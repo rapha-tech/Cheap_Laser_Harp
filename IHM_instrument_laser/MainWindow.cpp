@@ -16,7 +16,7 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
-
+#include <QFileDialog>
 
 
 const QStringList MainWindow::NOTES_BLANCHES = {
@@ -106,7 +106,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QAction *actionSF2 = new QAction("&Importer SF2...", this);
     mInstrument->addAction(actionSF2);
-    connect(actionnv, SIGNAL(triggered()), this, SLOT(loadSF2()));
+    connect(actionSF2, SIGNAL(triggered()), this, SLOT(loadSF2()));
 
 
     mListePeripheriques = new QMenu("&Peripheriques");
@@ -116,8 +116,8 @@ MainWindow::MainWindow(QWidget *parent)
     mInstrument->addMenu(mListePeripheriques);
 
     // this action is used to update the list of available Midi ports
-    QAction *actionInstr = menuBar()->addMenu(mInstrument);
-    connect(actionInstr, &QAction::hovered, this, [=]() { // FIXME : use triggered instead of hovered
+    menuBar()->addMenu(mInstrument);
+    connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
         updatePorts();
     });
 
@@ -381,23 +381,12 @@ MainWindow::MainWindow(QWidget *parent)
                 }
             });
 
-    // Remplir combobox avec instruments SF2
-    QStringList instruments = m_engine->getInstrumentsDisponibles();
-    if (!instruments.isEmpty()) {
-        m_choixInstrument->blockSignals(true);
-        m_choixInstrument->addItems(instruments);
-        m_choixInstrument->blockSignals(false);
-    } else {
-        m_choixInstrument->addItems({"0 - Piano"});
-    }
+    QString filename = "florestan-subset.sf2";
+    updateListInstruments(filename);
 
     m_engine->chargerInstrument(m_choixInstrument->currentRow());
     m_engine->setVolume(0.8f);
     m_engine->initMidi();
-
-    qDebug() << "=== Instruments SF2 ===";
-    for (const QString &s : m_engine->getInstrumentsDisponibles())
-        qDebug() << s;
 
     setCentralWidget(central);
     setWindowTitle("Instrument Laser");
@@ -413,7 +402,7 @@ MainWindow::MainWindow(QWidget *parent)
         about.setText(
             "<h3>Harpe Laser</h3>"
             "<p>Projet réalisé dans le cadre d'un projet de 3ème année.</p>"
-            "<p><b>Equipe :</b> Lot 2</p>"
+            "<p><b>Equipe 2 :</b> Lot 2</p>"
             "<hr>"
             "<p>Un instrument de musique laser interactif — "
             "assignez des notes à chaque laser, "
@@ -561,7 +550,25 @@ void MainWindow::actif() {
 
 void MainWindow::loadSF2()
 {
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open SoundFont"), "", tr("SoundFont (*.sf2)"));
+    updateListInstruments(fileName);
+}
 
+void MainWindow::updateListInstruments(QString& fileName)
+{
+    m_engine->loadSoundFont(fileName);
+
+    m_choixInstrument->clear();
+
+    // Remplir QlistWidget avec instruments SF2
+    QStringList instruments = m_engine->getInstrumentsDisponibles();
+    if (!instruments.isEmpty()) {
+        m_choixInstrument->blockSignals(true);
+        m_choixInstrument->addItems(instruments);
+        m_choixInstrument->blockSignals(false);
+    } else {
+        m_choixInstrument->addItems({"0 - Piano"});
+    }
 }
 
 void MainWindow::connectMidi(int id)
