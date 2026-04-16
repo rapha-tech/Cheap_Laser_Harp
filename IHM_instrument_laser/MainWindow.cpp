@@ -89,7 +89,9 @@ MainWindow::MainWindow(QWidget *parent)
     int volume = m_configFile->get_volume();
     int port_id = m_configFile->get_port_id();
 
-    m_engine = new EngineLaser(this, soundFontPath);
+    m_engine = new EngineLaser(this);
+    m_engine->initEngine(soundFontPath);
+
 
     for (int i = 1; i <= 6; i++) {
         m_laserNote[i]         = i - 1;
@@ -402,11 +404,15 @@ MainWindow::MainWindow(QWidget *parent)
                 }
             });
 
-    // apply previously loaded settings
     updateListInstruments(soundFontPath);
 
-    m_choixInstrument->setCurrentRow(instrumentId);
-    m_engine->chargerInstrument(instrumentId);
+    // apply previously loaded settings
+    if(m_engine->isAudioOk())
+    {
+        // load soundFont related stuff only if init was sucessfull
+        m_choixInstrument->setCurrentRow(instrumentId);
+        m_engine->chargerInstrument(instrumentId);
+    }
 
     sliderVol->setValue(volume);
     m_engine->setVolume(volume / 100.0f);
@@ -440,12 +446,35 @@ MainWindow::MainWindow(QWidget *parent)
     });
 }
 
+void MainWindow::isEngineOk()
+{
+    while(!m_engine->isAudioOk()) // probably an error with SoundFont loading
+    {
+        if (QMessageBox::warning(this, "Erreur SoudFont", "Recharger une SoundFont ?", QMessageBox:: Yes | QMessageBox:: No) == QMessageBox::Yes)
+        {
+            QString fileName = QFileDialog::getOpenFileName(this, tr("Open SoundFont"), "", tr("SoundFont (*.sf2)"));
+
+            m_engine->initEngine(fileName);
+
+            m_configFile->set_soundFont_path(fileName);
+            updateListInstruments(fileName);
+
+            int instrumentId = m_configFile->get_instr_id();
+            m_choixInstrument->setCurrentRow(instrumentId);
+            m_engine->chargerInstrument(instrumentId);
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
 // ─────────────────────────────────────────────
 void MainWindow::resizeEvent(QResizeEvent *event) {
     QMainWindow::resizeEvent(event);
     repositionnerTouchesNoires();
 }
-
 
 
 void MainWindow::repositionnerTouchesNoires() {
@@ -559,7 +588,10 @@ void MainWindow::eteindreBarre(int id) {
 void MainWindow::fermer() {
     if (QMessageBox::warning(this, "Quitter", "Fermer l'application ?", QMessageBox:: Yes | QMessageBox:: No)
         == QMessageBox::Yes)
+    {
+        m_configFile->write(configPath);
         close();
+    }
 }
 
 void MainWindow::nouveau() {
@@ -576,6 +608,10 @@ void MainWindow::actif() {
 void MainWindow::loadSF2()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open SoundFont"), "", tr("SoundFont (*.sf2)"));
+
+    if(!m_engine->isAudioOk()) // there was probably an error on initialisation with the last SoundFont
+        m_engine->initEngine(fileName);
+
     m_configFile->set_soundFont_path(fileName);
     updateListInstruments(fileName);
 }

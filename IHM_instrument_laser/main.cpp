@@ -8,6 +8,7 @@ int main(int argc, char *argv[])
     MainWindow fenetre;
 
     fenetre.show();
+    fenetre.isEngineOk();
 
     return app.exec();
 }

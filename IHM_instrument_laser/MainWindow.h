@@ -19,6 +19,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = nullptr);
+    void isEngineOk();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

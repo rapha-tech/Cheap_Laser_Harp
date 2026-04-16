@@ -15,51 +15,13 @@ static const int MIDI_BLANC[] = {0,2,4,5,7,9,11,12,14,16,17,19};
 // Noires   : Do# Re# -  Fa# Sol# La# -  Do# Re# -  Fa# -
 static const int MIDI_NOIR[]  = {1,3,-1,6,8,10,-1,13,15,-1,18,-1};
 
-EngineLaser::EngineLaser(QObject *parent, QString& soundFontPath) : QObject(parent)
+EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
 {
     // Assignation par défaut : laser i → note i-1 (Do, Re, Mi, Fa, Sol, La)
     for (int i = 1; i <= 6; i++)
         m_laserMidiNote[i] = MIDI_BASE + MIDI_BLANC[i - 1];
 
-    // ── Init audio ──
-    ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
-    cfg.playback.format = ma_format_f32;
-    cfg.playback.channels = 2;
-    cfg.sampleRate = 44100;
-    cfg.dataCallback = EngineLaser::audioCallback;
-    cfg.pUserData = this;
-
-    if (ma_device_init(nullptr, &cfg, &m_device) != MA_SUCCESS) {
-        qWarning() << "EngineLaser: impossible d'initialiser l'audio";
-        return;
-    }
-
-    ma_mutex_init(&m_mutex);
-
-    // ── Charger le SoundFont ──
-    if(soundFontPath != nullptr)
-        m_tsf = tsf_load_filename(soundFontPath.toLocal8Bit().constData());
-    else
-        m_tsf = tsf_load_filename("florestan-subset.sf2");
-
-    if (!m_tsf) {
-        qWarning() << "EngineLaser: SoundFont introuvable !";
-        qWarning() << "Placez le fichier dans le dossier de build.";
-        ma_device_uninit(&m_device);
-        return;
-    }
-
-    tsf_set_output(m_tsf, TSF_STEREO_INTERLEAVED, 44100, 0);
-
-    if (ma_device_start(&m_device) != MA_SUCCESS) {
-        qWarning() << "EngineLaser: impossible de démarrer la lecture";
-        ma_device_uninit(&m_device);
-        return;
-    }
-
-    m_audioOk = true;
-    qDebug() << "EngineLaser: audio OK —"
-             << tsf_get_presetcount(m_tsf) << "instruments disponibles";
+    m_audioOk = false;
 }
 
 EngineLaser::~EngineLaser()
@@ -71,6 +33,48 @@ EngineLaser::~EngineLaser()
     }
     if (m_tsf)
         tsf_close(m_tsf);
+}
+
+bool EngineLaser::initEngine(QString& soundFontPath)
+{
+    // ── Init audio ──
+    ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
+    cfg.playback.format = ma_format_f32;
+    cfg.playback.channels = 2;
+    cfg.sampleRate = 44100;
+    cfg.dataCallback = EngineLaser::audioCallback;
+    cfg.pUserData = this;
+
+    if (ma_device_init(nullptr, &cfg, &m_device) != MA_SUCCESS) {
+        qWarning() << "EngineLaser: impossible d'initialiser l'audio";
+        return 0;
+    }
+
+    ma_mutex_init(&m_mutex);
+
+    // ── Charger le SoundFont ──
+    m_tsf = tsf_load_filename(soundFontPath.toLocal8Bit().constData());
+
+    if (!m_tsf) {
+        qWarning() << "EngineLaser: SoundFont introuvable !";
+        ma_device_uninit(&m_device);
+        return 0;
+    }
+
+    if (ma_device_start(&m_device) != MA_SUCCESS) {
+        qWarning() << "EngineLaser: impossible de démarrer la lecture";
+        ma_device_uninit(&m_device);
+        return 0;
+    }
+
+    m_audioOk = true;
+    qDebug() << "EngineLaser: audio OK ";
+    return 1;
+}
+
+bool EngineLaser::isAudioOk()
+{
+    return m_audioOk;
 }
 
 // ─────────────────────────────────────────────
@@ -277,8 +281,8 @@ void EngineLaser::loadSoundFont(QString& fileName)
     m_tsf = tsf_load_filename(fileName.toLocal8Bit().constData());
     if (!m_tsf) {
         qWarning() << "EngineLaser: SoundFont introuvable !";
-        qWarning() << "Chargement du fichier par default.";
-        m_tsf = tsf_load_filename("florestan-subset.sf2");
         return;
     }
+
+    tsf_set_output(m_tsf, TSF_STEREO_INTERLEAVED, 44100, 0);
 }

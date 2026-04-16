@@ -13,8 +13,10 @@
 class EngineLaser : public QObject {
     Q_OBJECT
 public:
-    explicit EngineLaser(QObject *parent, QString&);
+    explicit EngineLaser(QObject *parent);
     ~EngineLaser();
+    bool initEngine(QString& soundFontPath);
+    bool isAudioOk();
 
     // Instrument
     void         chargerInstrument(int idInstrument);
