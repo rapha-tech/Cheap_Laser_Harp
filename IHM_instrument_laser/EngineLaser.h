@@ -13,7 +13,7 @@
 class EngineLaser : public QObject {
     Q_OBJECT
 public:
-    explicit EngineLaser(QObject *parent = nullptr, char* = nullptr);
+    explicit EngineLaser(QObject *parent, QString&);
     ~EngineLaser();
 
     // Instrument

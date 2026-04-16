@@ -3,22 +3,30 @@
 
 #include "lib/yyjson.h"
 
+#include <QString>
+
 class configFile
 {
 private:
-    char* SoundFont_path;
+    QString SoundFont_path;
     int instrument_id;
     int volume;
     int port_id;
 
 public:
-    configFile(char*);
+    configFile(QString&);
 
-    void write(char*);
-    char* get_soundFont_path();
+    void write(QString&);
+
+    QString get_soundFont_path();
     int get_instr_id();
     int get_volume();
     int get_port_id();
+
+    void set_soundFont_path(QString&);
+    void set_instr_id(int);
+    void set_volume(int);
+    void set_port_id(int);
 };
 
 #endif // CONFIGFILE_H

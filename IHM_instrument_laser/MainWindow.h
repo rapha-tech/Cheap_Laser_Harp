@@ -37,6 +37,7 @@ private slots:
     void connectMidi(int id);
     void updatePorts();
     void updateListInstruments(QString&);
+    void loadInstrument(int id);
 
 private:
     void repositionnerTouchesNoires();

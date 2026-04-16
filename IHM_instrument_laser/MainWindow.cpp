@@ -80,10 +80,11 @@ MainWindow::MainWindow(QWidget *parent)
     //this->setStyleSheet("MainWindow { background-image: url(:/1.png); }");
 
     // load config file
-    m_configFile = new configFile("config.json");
+    QString configPath = QString("config.json");
+    m_configFile = new configFile(configPath);
 
     // get settings
-    char* soundFontPath = m_configFile->get_soundFont_path();
+    QString soundFontPath = m_configFile->get_soundFont_path();
     int instrumentId = m_configFile->get_instr_id();
     int volume = m_configFile->get_volume();
     int port_id = m_configFile->get_port_id();
@@ -374,10 +375,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ── Connexions ──
     connect(m_choixInstrument, &QListWidget ::currentRowChanged,
-            m_engine, &EngineLaser::chargerInstrument);
+            this, [=](int row) {loadInstrument(row);});
 
     connect(sliderVol, &QSlider::valueChanged, this, [=](int val) {
         m_engine->setVolume(val / 100.0f); // TODO : use logarithmic scale
+        m_configFile->set_volume(val);
     });
 
     connect(m_engine, &EngineLaser::noteRecueMidi,
@@ -565,6 +567,7 @@ void MainWindow::actif() {
 void MainWindow::loadSF2()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open SoundFont"), "", tr("SoundFont (*.sf2)"));
+    m_configFile->set_soundFont_path(fileName);
     updateListInstruments(fileName);
 }
 
@@ -589,6 +592,7 @@ void MainWindow::connectMidi(int id)
 {
     m_engine->stopMidi();
     m_engine->initMidi(id);
+    m_configFile->set_port_id(id);
 }
 
 void MainWindow::updatePorts()
@@ -616,4 +620,10 @@ void MainWindow::updatePorts()
     {
         mListePeripheriques->addAction("&Aucun peripherique compatible");
     }
+}
+
+void MainWindow::loadInstrument(int id)
+{
+    m_engine->chargerInstrument(id);
+    m_configFile->set_instr_id(id);
 }

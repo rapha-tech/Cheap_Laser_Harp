@@ -13,16 +13,16 @@
 //        "notes_laser_5":[54, 58, 56]
 //     }
 
-configFile::configFile(char* conFigFilePath)
+configFile::configFile(QString& conFigFilePath)
 {
-    // FIXME : should not be needed since files should be always "perfect"
-    SoundFont_path = nullptr;
+    // Default values if no file is found
+    SoundFont_path = QString();
     instrument_id = 0;
     volume = 80;
     port_id = 0;
 
     // Read the JSON file
-    yyjson_doc *doc = yyjson_read_file(conFigFilePath, 0, NULL, NULL);
+    yyjson_doc *doc = yyjson_read_file(conFigFilePath.toLocal8Bit().constData(), 0, NULL, NULL);
 
     // Iterate over the root object
     if (doc) {
@@ -34,8 +34,7 @@ configFile::configFile(char* conFigFilePath)
             if(!strcmp(yyjson_get_str(key), "soundfont_path"))
             {
                 val = yyjson_obj_iter_get_val(key);
-                SoundFont_path = new char[strlen(yyjson_get_str(val)) + 1];
-                strcpy(SoundFont_path, yyjson_get_str(val));
+                SoundFont_path = QString(yyjson_get_str(val));
             }
             else if(!strcmp(yyjson_get_str(key), "instrument_id"))
             {
@@ -62,7 +61,7 @@ configFile::configFile(char* conFigFilePath)
 }
 
 
-void configFile::write(char* conFigFilePath)
+void configFile::write(QString& conFigFilePath)
 {
     // Create a mutable document. ie can be modified
     yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
@@ -71,7 +70,7 @@ void configFile::write(char* conFigFilePath)
     yyjson_mut_val *root = yyjson_mut_obj(doc);
 
     // SoundFont path
-    yyjson_mut_val *val_SoundFont_path = yyjson_mut_str(doc, SoundFont_path);
+    yyjson_mut_val *val_SoundFont_path = yyjson_mut_str(doc, SoundFont_path.toLocal8Bit().constData());
     yyjson_mut_obj_add(root, yyjson_mut_str(doc, "soundfont_path"), val_SoundFont_path);
 
     // Instrument id
@@ -98,14 +97,14 @@ void configFile::write(char* conFigFilePath)
     yyjson_mut_doc_set_root(doc, root);
 
 
-    bool suc = yyjson_mut_write_file(conFigFilePath, doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
+    bool suc = yyjson_mut_write_file(conFigFilePath.toLocal8Bit().constData(), doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
     if (suc) printf("OK");
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);
 }
 
-char* configFile::get_soundFont_path()
+QString configFile::get_soundFont_path()
 {
     return SoundFont_path;
 }
@@ -123,4 +122,25 @@ int configFile::get_volume()
 int configFile::get_port_id()
 {
     return port_id;
+}
+
+
+void configFile::set_soundFont_path(QString& path)
+{
+    SoundFont_path = path;
+}
+
+void configFile::set_instr_id(int id)
+{
+    instrument_id = id;
+}
+
+void configFile::set_volume(int vol)
+{
+    volume = vol;
+}
+
+void configFile::set_port_id(int id)
+{
+    port_id = id;
 }

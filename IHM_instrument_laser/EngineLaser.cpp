@@ -15,7 +15,7 @@ static const int MIDI_BLANC[] = {0,2,4,5,7,9,11,12,14,16,17,19};
 // Noires   : Do# Re# -  Fa# Sol# La# -  Do# Re# -  Fa# -
 static const int MIDI_NOIR[]  = {1,3,-1,6,8,10,-1,13,15,-1,18,-1};
 
-EngineLaser::EngineLaser(QObject *parent, char* soundFontPath) : QObject(parent)
+EngineLaser::EngineLaser(QObject *parent, QString& soundFontPath) : QObject(parent)
 {
     // Assignation par défaut : laser i → note i-1 (Do, Re, Mi, Fa, Sol, La)
     for (int i = 1; i <= 6; i++)
@@ -38,7 +38,7 @@ EngineLaser::EngineLaser(QObject *parent, char* soundFontPath) : QObject(parent)
 
     // ── Charger le SoundFont ──
     if(soundFontPath != nullptr)
-        m_tsf = tsf_load_filename(soundFontPath);
+        m_tsf = tsf_load_filename(soundFontPath.toLocal8Bit().constData());
     else
         m_tsf = tsf_load_filename("florestan-subset.sf2");
 
