@@ -631,6 +631,11 @@ void MainWindow::updateListInstruments(QString& fileName)
     } else {
         m_choixInstrument->addItems({"Pas de SoundFont chargee"});
     }
+
+    // load the fisrt instrument in the SoundFont
+    m_engine->chargerInstrument(0);
+    m_configFile->set_instr_id(0);
+    m_choixInstrument->setCurrentRow(0);
 }
 
 void MainWindow::connectMidi(int id)
@@ -643,9 +648,7 @@ void MainWindow::connectMidi(int id)
 void MainWindow::updatePorts()
 {
     if(!mListePeripheriques->isEmpty())
-    {
         mListePeripheriques->clear();
-    }
 
     // On ajouter les périphériques disponibles (connectés au PC)
     QStringList ListePorts = m_engine->getMidiPorts();
