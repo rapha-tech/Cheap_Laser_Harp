@@ -38,11 +38,15 @@ private slots:
     void updatePorts();
     void updateListInstruments(QString&);
     void loadInstrument(int id);
+    void saveConfig();
+    void saveConfigAs();
 
 private:
     void repositionnerTouchesNoires();
     void surlignerToucheAssignee(int laserId);
     void resetStylePiano();
+
+    QString configPath;
 
     QMenu *mListePeripheriques;
 

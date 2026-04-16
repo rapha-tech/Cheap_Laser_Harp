@@ -80,7 +80,7 @@ MainWindow::MainWindow(QWidget *parent)
     //this->setStyleSheet("MainWindow { background-image: url(:/1.png); }");
 
     // load config file
-    QString configPath = QString("config.json");
+    configPath = QString("config.json");
     m_configFile = new configFile(configPath);
 
     // get settings
@@ -102,9 +102,19 @@ MainWindow::MainWindow(QWidget *parent)
     actionnv->setShortcut(QKeySequence(tr("Ctrl + N")));
     connect(actionnv, SIGNAL(triggered()), this, SLOT(nouveau()));
 
+    QAction *actionCharger = new QAction("&Charger configuration", this);
+    mFichier->addAction(actionCharger);
+    connect(actionCharger, SIGNAL(triggered()), this, SLOT(close()));
 
-    mFichier->addAction("&Ouvrir...");
-    mFichier->addAction("&Enregistrer");
+    QAction *actionSave = new QAction("&Enregistrer", this);
+    mFichier->addAction(actionSave);
+    actionSave->setShortcut(QKeySequence(tr("Ctrl + S")));
+    connect(actionSave, SIGNAL(triggered()), this, SLOT(saveConfig()));
+
+    QAction *actionSaveAs = new QAction("&Enregistrer sous", this);
+    mFichier->addAction(actionSaveAs);
+    connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(saveConfigAs()));
+
     mFichier->addSeparator();
 
     QAction *actionQuitter = new QAction("&Quitter", this);
@@ -626,4 +636,16 @@ void MainWindow::loadInstrument(int id)
 {
     m_engine->chargerInstrument(id);
     m_configFile->set_instr_id(id);
+}
+
+void MainWindow::saveConfig()
+{
+    m_configFile->write(configPath);
+}
+
+void MainWindow::saveConfigAs()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save configuration file"), "config.json", tr("Configuration file (*.json)"));
+    m_configFile->write(fileName);
+    configPath = fileName;
 }
