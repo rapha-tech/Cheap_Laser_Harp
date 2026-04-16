@@ -38,6 +38,7 @@ private slots:
     void updatePorts();
     void updateListInstruments(QString&);
     void loadInstrument(int id);
+    void loadConfig();
     void saveConfig();
     void saveConfigAs();
 
@@ -49,6 +50,7 @@ private:
     QString configPath;
 
     QMenu *mListePeripheriques;
+    QSlider *sliderVol;
 
     QVector<QFrame*> m_barres;
     QVector<QPushButton*> m_btnLaser;

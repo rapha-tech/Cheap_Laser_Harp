@@ -104,7 +104,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QAction *actionCharger = new QAction("&Charger configuration", this);
     mFichier->addAction(actionCharger);
-    connect(actionCharger, SIGNAL(triggered()), this, SLOT(close()));
+    connect(actionCharger, SIGNAL(triggered()), this, SLOT(loadConfig()));
 
     QAction *actionSave = new QAction("&Enregistrer", this);
     mFichier->addAction(actionSave);
@@ -196,7 +196,7 @@ MainWindow::MainWindow(QWidget *parent)
     left->addWidget(m_choixInstrument, 70); // this is to "fill" the left panel with Qlist elements
 
     left->addWidget(new QLabel("Volume"));
-    QSlider *sliderVol = new QSlider(Qt::Horizontal);
+    sliderVol = new QSlider(Qt::Horizontal);
     sliderVol->setRange(0, 100);
     left->addWidget(sliderVol);
 
@@ -403,8 +403,7 @@ MainWindow::MainWindow(QWidget *parent)
             });
 
     // apply previously loaded settings
-    QString filename = QString(soundFontPath);
-    updateListInstruments(filename);
+    updateListInstruments(soundFontPath);
 
     m_choixInstrument->setCurrentRow(instrumentId);
     m_engine->chargerInstrument(instrumentId);
@@ -594,7 +593,7 @@ void MainWindow::updateListInstruments(QString& fileName)
         m_choixInstrument->addItems(instruments);
         m_choixInstrument->blockSignals(false);
     } else {
-        m_choixInstrument->addItems({"0 - Piano"});
+        m_choixInstrument->addItems({"Pas de SoundFont chargee"});
     }
 }
 
@@ -636,6 +635,26 @@ void MainWindow::loadInstrument(int id)
 {
     m_engine->chargerInstrument(id);
     m_configFile->set_instr_id(id);
+}
+
+void MainWindow::loadConfig()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open configuration file"), "", tr("Configuration file (*.json)"));
+    delete m_configFile;
+    m_configFile = new configFile(fileName);
+    configPath = fileName;
+
+    QString soundFontPath = m_configFile->get_soundFont_path();
+    int instrumentId = m_configFile->get_instr_id();
+    int volume = m_configFile->get_volume();
+    // int port_id = m_configFile->get_port_id(); we don't change the midi port
+
+    updateListInstruments(soundFontPath);
+    m_choixInstrument->setCurrentRow(instrumentId);
+    m_engine->chargerInstrument(instrumentId);
+
+    sliderVol->setValue(volume);
+    m_engine->setVolume(volume / 100.0f);
 }
 
 void MainWindow::saveConfig()
