@@ -118,17 +118,6 @@ QStringList EngineLaser::getInstrumentsDisponibles() const
 }
 
 // ─────────────────────────────────────────────
-void EngineLaser::setNoteIndex(int laserId, int noteMidi)
-{
-    int ancienMidi = accords[laserId].notes[0];
-    ma_mutex_lock(&m_mutex);
-    tsf_note_off(m_tsf, m_instrument, ancienMidi);
-    ma_mutex_unlock(&m_mutex);
-
-    accords[laserId].notes[0] = noteMidi;
-}
-
-// ─────────────────────────────────────────────
 void EngineLaser::jouerNote(int laserId)
 {
     if (!m_audioOk || !m_tsf) return;

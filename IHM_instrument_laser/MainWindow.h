@@ -60,8 +60,6 @@ private:
     QVector<QPushButton*> m_touchesBlanches;
     QVector<QPushButton*> m_touchesNoires;
 
-    QMap<int, int> m_laserNote;
-    QMap<int, bool> m_laserNoteEstNoire;
     accord_t* m_accords;
     int m_laserEnAssignation;
     int m_pselectedTouches[24];

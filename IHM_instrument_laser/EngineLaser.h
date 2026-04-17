@@ -31,7 +31,6 @@ public:
     void loadSoundFont(QString&);
 
     // Notes lasers
-    void setNoteIndex(int laserId, int noteMidi);
     void jouerNote(int laserId);
     void stopperNote(int laserId);
 
