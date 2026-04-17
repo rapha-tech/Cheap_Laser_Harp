@@ -273,7 +273,7 @@ MainWindow::MainWindow(QWidget *parent)
         barre->setStyleSheet("background-color: #222; border-radius: 5px;");
         m_barres[i] = barre;
 
-        QPushButton *btn = new QPushButton(QString("Laser %1").arg(i));
+        QPushButton *btn = new QPushButton(QString("Laser %1").arg(i + 1));
 
         btn->setMinimumHeight(100);
         btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -526,21 +526,14 @@ void MainWindow::surlignerToucheAssignee(int laserId) {
 void MainWindow::activerAssignation(int laserId) {
     m_laserEnAssignation = laserId;
 
-    for (int i = 0; i < 6; i++) {
-        bool actif = (i == laserId);
-        QString note = m_laserNoteEstNoire[i]
-                           ? NOTES_NOIRES[m_laserNote[i]]
-                           : NOTES_BLANCHES[m_laserNote[i]];
-        m_btnAssign[i]->setText(actif ? "..." : note);
-        m_btnAssign[i]->setStyleSheet(
-            actif
-                ? "QPushButton { background-color: #330033; border-radius: 4px;"
-                  "  border: 1px solid #ff00ff; color: #ff00ff; font-size: 11px; }"
-                : "QPushButton { background-color: #222; border-radius: 4px;"
-                  "  border: 1px solid #444; color: #aaa; font-size: 11px; }"
-                  "QPushButton:hover { border-color: #ff00ff; color: #ff00ff; }"
-            );
-    }
+    QString note = m_laserNoteEstNoire[laserId]
+                        ? NOTES_NOIRES[m_laserNote[laserId]]
+                        : NOTES_BLANCHES[m_laserNote[laserId]];
+    m_btnAssign[laserId]->setText("...");
+    m_btnAssign[laserId]->setStyleSheet(
+        "QPushButton { background-color: #330033; border-radius: 4px;"
+        "  border: 1px solid #ff00ff; color: #ff00ff; font-size: 11px; }"
+    );
     surlignerToucheAssignee(laserId);
 }
 
@@ -549,6 +542,7 @@ void MainWindow::assignerNoteLaser(int noteIndex, bool estNoire) {
 
     int id = m_laserEnAssignation;
     m_laserNote[id]         = noteIndex;
+    qDebug() << m_laserEnAssignation << "note : " << noteIndex;
     m_laserNoteEstNoire[id] = estNoire;
 
     QString nomNote = estNoire

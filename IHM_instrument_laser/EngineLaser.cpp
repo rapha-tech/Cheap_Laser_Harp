@@ -22,14 +22,6 @@ EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
     {
         accords[i].n_notes = 1;
         accords[i].notes[0] = 60 + i;
-
-        if(i == 2)
-        {
-            accords[i].notes[1] = 66;
-            accords[i].notes[2] = 70;
-            accords[i].notes[3] = 73;
-            accords[i].n_notes = 4;
-        }
     }
 
     m_audioOk = false;
@@ -137,13 +129,12 @@ int EngineLaser::noteIndexToMidi(int noteIndex, bool estNoire)
 void EngineLaser::setNoteIndex(int laserId, int noteIndex, bool estNoire)
 {
     // AJOUTE : stoppe l'ancienne note avant de changer
-    int ancienMidi = m_laserMidiNote.value(laserId, MIDI_BASE);
+    int ancienMidi = accords[laserId].notes[0];
     ma_mutex_lock(&m_mutex);
     tsf_note_off(m_tsf, m_instrument, ancienMidi);
     ma_mutex_unlock(&m_mutex);
 
-    m_laserMidiNote[laserId] = noteIndexToMidi(noteIndex, estNoire);
-    qDebug() << "Laser" << laserId << "-> MIDI" << m_laserMidiNote[laserId];
+    accords[laserId].notes[0] = noteIndexToMidi(noteIndex, estNoire);
 }
 
 // ─────────────────────────────────────────────
