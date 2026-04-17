@@ -29,13 +29,13 @@ public:
     void loadSoundFont(QString&);
 
     // Notes lasers
-    void setNoteIndex(int laserId, int noteIndex, bool estNoire);
+    void setNoteIndex(int laserId, int noteMidi);
     void jouerNote(int laserId);
     void stopperNote(int laserId);
 
     // Notes directes depuis le piano
-    void jouerNoteDirecte(int noteIndex, bool estNoire);
-    void stopperNoteDirecte(int noteIndex, bool estNoire);
+    void jouerNoteDirecte(int noteMidi);
+    void stopperNoteDirecte(int noteMidi);
 
     // Volume
     void setVolume(float niveau);

@@ -19,16 +19,13 @@
 #include <QAction>
 #include <QFileDialog>
 
+#define NOTES_DISPLAYED 24
+#define DEFAULT_OCTAVE 4 * 12
 
-const QStringList MainWindow::NOTES_BLANCHES = {
-    "Do","Re","Mi","Fa","Sol","La","Si",
-    "Do","Re","Mi","Fa","Sol"
+const QStringList MainWindow::NOTES_NAMES = {
+    "Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"
 };
-const QStringList MainWindow::NOTES_NOIRES = {
-    "Do#","Re#","","Fa#","Sol#","La#","",
-    "Do#","Re#","","Fa#",""
-};
-const QList<int> MainWindow::POSITIONS_NOIRES = {0,1,3,4,5,7,8,10};
+const QList<int> MainWindow::IS_NOIRE = {0,1,0,1,0,0,1,0,1,0,1,0};
 
 static const QString S_BLANCHE =
     "QPushButton {"
@@ -94,8 +91,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     for (int i = 0; i < 6; i++) {
-        m_laserNote[i]         = i;
-        m_laserNoteEstNoire[i] = false;
+        m_laserNote[i] = DEFAULT_OCTAVE + i;
     }
 
     QMenu *mFichier = menuBar()->addMenu("&Fichier");
@@ -154,11 +150,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(reinitialiser,
             &QAction::triggered, this, [=]() {
                 for (int i = 0; i < 6; i++) {
-                    m_laserNote[i] = i;
-                    m_laserNoteEstNoire[i] = false;
-                    m_engine->setNoteIndex(i, i, false);
-                    m_btnAssign[i]->setText(NOTES_BLANCHES[i]);
-                    m_labelsNotes[i]->setText(NOTES_BLANCHES[i]);
+                    m_laserNote[i] = DEFAULT_OCTAVE + i;
+                    m_engine->setNoteIndex(i, DEFAULT_OCTAVE + i);
+                    m_btnAssign[i]->setText(NOTES_NAMES[(DEFAULT_OCTAVE + i) % 12]);
+                    m_labelsNotes[i]->setText(NOTES_NAMES[(DEFAULT_OCTAVE + i) % 12]);
                 }
             });
     mLasers->addAction("&Parametres...");
@@ -217,7 +212,7 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i = 0; i < 6; i++) {
         QLabel *laserLbl = new QLabel(QString("Laser %1 :").arg(i + 1));
         laserLbl->setStyleSheet("font-size: 11px;");
-        QLabel *noteLbl  = new QLabel(NOTES_BLANCHES[i]);
+        QLabel *noteLbl  = new QLabel(NOTES_NAMES[i]);
         noteLbl->setStyleSheet(
             "font-size: 11px; font-weight: bold; color: #ff66cc;");
         m_labelsNotes[i] = noteLbl;
@@ -295,7 +290,7 @@ MainWindow::MainWindow(QWidget *parent)
         });
         m_btnLaser[i] = btn;
 
-        QPushButton *assignBtn = new QPushButton(NOTES_BLANCHES[i]);
+        QPushButton *assignBtn = new QPushButton(NOTES_NAMES[(DEFAULT_OCTAVE + i) % 12]);
         assignBtn->setMinimumHeight(28);
         btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         assignBtn->setStyleSheet(
@@ -333,21 +328,25 @@ MainWindow::MainWindow(QWidget *parent)
     pianoLay->setSpacing(1);
     pianoLay->setContentsMargins(0, 0, 0, 0);
 
-    for (int i = 0; i < NOTES_BLANCHES.size(); i++) {
-        QPushButton *blanc = new QPushButton(NOTES_BLANCHES[i]);
-        blanc->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        blanc->setMinimumWidth(10);
-        blanc->setStyleSheet(S_BLANCHE);
-        connect(blanc, &QPushButton::pressed, this, [=]() {
-            m_engine->jouerNoteDirecte(i, false);
-        });
-        connect(blanc, &QPushButton::released, this, [=]() {
-            m_engine->stopperNoteDirecte(i, false);
-            if (m_laserEnAssignation >= 0)
-                assignerNoteLaser(i, false);
-        });
-        m_touchesBlanches.append(blanc);
-        pianoLay->addWidget(blanc);
+    for (int i = 0; i < NOTES_DISPLAYED; i++)
+    {
+        if(!IS_NOIRE[i % 12]) // only draw white ones
+        {
+            QPushButton *blanc = new QPushButton(NOTES_NAMES[i % 12]);
+            blanc->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            blanc->setMinimumWidth(10);
+            blanc->setStyleSheet(S_BLANCHE);
+            connect(blanc, &QPushButton::pressed, this, [=]() {
+                m_engine->jouerNoteDirecte(DEFAULT_OCTAVE + i);
+            });
+            connect(blanc, &QPushButton::released, this, [=]() {
+                m_engine->stopperNoteDirecte(DEFAULT_OCTAVE + i);
+                if (m_laserEnAssignation >= 0)
+                    assignerNoteLaser(DEFAULT_OCTAVE + i);
+            });
+            m_touchesBlanches.append(blanc);
+            pianoLay->addWidget(blanc);
+        }
     }
 
     // Overlay touches noires
@@ -356,25 +355,26 @@ MainWindow::MainWindow(QWidget *parent)
     blackOverlay->setGeometry(0, 0, m_pianoWidget->width(), 75);
     blackOverlay->raise();
 
-    for (int n = 0; n < POSITIONS_NOIRES.size(); n++) {
-        int idx = POSITIONS_NOIRES[n];
-        if (idx >= NOTES_NOIRES.size() || NOTES_NOIRES[idx].isEmpty()) continue;
+    for (int i = 0; i < NOTES_DISPLAYED; i++)
+    {
+        if(IS_NOIRE[i % 12]) // only draw black ones
+        {
+            QPushButton *noir = new QPushButton();
+            noir->setFixedSize(18, 75);
+            noir->setStyleSheet(S_NOIRE);
+            noir->setParent(blackOverlay);
+            noir->raise();
+            m_touchesNoires.append(noir);
 
-        QPushButton *noir = new QPushButton();
-        noir->setFixedSize(18, 75);
-        noir->setStyleSheet(S_NOIRE);
-        noir->setParent(blackOverlay);
-        noir->raise();
-        m_touchesNoires.append(noir);
-
-        connect(noir, &QPushButton::pressed, this, [=]() {
-            m_engine->jouerNoteDirecte(idx, true);
-        });
-        connect(noir, &QPushButton::released, this, [=]() {
-            m_engine->stopperNoteDirecte(idx, true);
-            if (m_laserEnAssignation >= 0)
-                assignerNoteLaser(idx, true);
-        });
+            connect(noir, &QPushButton::pressed, this, [=]() {
+                m_engine->jouerNoteDirecte(DEFAULT_OCTAVE + i);
+            });
+            connect(noir, &QPushButton::released, this, [=]() {
+                m_engine->stopperNoteDirecte(DEFAULT_OCTAVE + i);
+                if (m_laserEnAssignation >= 0)
+                    assignerNoteLaser(DEFAULT_OCTAVE + i);
+            });
+        }
     }
 
     pianoVBox->addWidget(pianoHint);
@@ -404,7 +404,6 @@ MainWindow::MainWindow(QWidget *parent)
                             if (active) allumerBarre(midiNote);
                             else        eteindreBarre(midiNote);
                     }
-                    
                 }
             });
 
@@ -430,6 +429,7 @@ MainWindow::MainWindow(QWidget *parent)
     QTimer::singleShot(0, this, [this]() {
         repositionnerTouchesNoires();
     });
+
     connect(mAide->addAction("&A propos"), &QAction::triggered, this, [=]() {
         QMessageBox about(this);
         about.setWindowTitle("A propos");
@@ -490,18 +490,28 @@ void MainWindow::repositionnerTouchesNoires() {
     overlay->setGeometry(0, 0, m_pianoWidget->width(), 75);
 
     int noirIdx = 0;
-    for (int idx : POSITIONS_NOIRES) {
-        if (noirIdx >= m_touchesNoires.size()) break;
-        if (idx + 1 >= m_touchesBlanches.size()) { noirIdx++; continue; }
+    int blancIdx = 0;
+    for (int idx = 0; idx < NOTES_DISPLAYED; idx++)
+    {
+        if(IS_NOIRE[idx % 12])
+        {
+            if (noirIdx >= m_touchesNoires.size()) break;
+            if (blancIdx < 0) { noirIdx++; continue;}
 
-        QRect gL = m_touchesBlanches[idx]->geometry();
-        QRect gR = m_touchesBlanches[idx + 1]->geometry();
-        int xCenter = (gL.right() + gR.left()) / 2;
-        m_touchesNoires[noirIdx]->move(xCenter - 9, 0);
-        m_touchesNoires[noirIdx]->raise();
-        noirIdx++;
+            QRect gL = m_touchesBlanches[blancIdx]->geometry();
+            QRect gR = m_touchesBlanches[blancIdx - 1]->geometry();
+            int xCenter = (gL.right() + gR.left()) / 2;
+            m_touchesNoires[noirIdx]->move(xCenter - 9, 0);
+            m_touchesNoires[noirIdx]->raise();
+            noirIdx++;
+        }
+        else
+        {
+            blancIdx++;
+        }
     }
 }
+
 
 void MainWindow::resetStylePiano() {
     for (auto t : m_touchesBlanches) t->setStyleSheet(S_BLANCHE);
@@ -510,25 +520,35 @@ void MainWindow::resetStylePiano() {
 
 void MainWindow::surlignerToucheAssignee(int laserId) {
     resetStylePiano();
-    int  noteIdx  = m_laserNote.value(laserId, -1);
-    bool estNoire = m_laserNoteEstNoire.value(laserId, false);
+    int noteMidi = m_laserNote[laserId];
+    int noteId = 0;
 
-    if (estNoire) {
-        int noirIdx = POSITIONS_NOIRES.indexOf(noteIdx);
-        if (noirIdx >= 0 && noirIdx < m_touchesNoires.size())
-            m_touchesNoires[noirIdx]->setStyleSheet(S_NOIRE_SEL);
-    } else {
-        if (noteIdx >= 0 && noteIdx < m_touchesBlanches.size())
-            m_touchesBlanches[noteIdx]->setStyleSheet(S_BLANCHE_SEL);
+    if (IS_NOIRE[noteMidi % 12])
+    {
+        for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
+        {
+            if(IS_NOIRE[i % 12])
+            {
+                noteId++;
+            }
+        }
+        m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_SEL);
+    }
+    else
+    {
+        for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
+        {
+            if(!IS_NOIRE[i % 12])
+            {
+                noteId++;
+            }
+        }
+        m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_SEL);
     }
 }
 
 void MainWindow::activerAssignation(int laserId) {
     m_laserEnAssignation = laserId;
-
-    QString note = m_laserNoteEstNoire[laserId]
-                        ? NOTES_NOIRES[m_laserNote[laserId]]
-                        : NOTES_BLANCHES[m_laserNote[laserId]];
     m_btnAssign[laserId]->setText("...");
     m_btnAssign[laserId]->setStyleSheet(
         "QPushButton { background-color: #330033; border-radius: 4px;"
@@ -537,17 +557,15 @@ void MainWindow::activerAssignation(int laserId) {
     surlignerToucheAssignee(laserId);
 }
 
-void MainWindow::assignerNoteLaser(int noteIndex, bool estNoire) {
+void MainWindow::assignerNoteLaser(int noteMidi) {
     if (m_laserEnAssignation < 0) return;
 
     int id = m_laserEnAssignation;
-    m_laserNote[id]         = noteIndex;
-    qDebug() << m_laserEnAssignation << "note : " << noteIndex;
-    m_laserNoteEstNoire[id] = estNoire;
+    m_laserNote[id] = noteMidi;
 
-    QString nomNote = estNoire
-                          ? NOTES_NOIRES[noteIndex]
-                          : NOTES_BLANCHES[noteIndex];
+    qDebug() << m_laserEnAssignation << "note : " << noteMidi;
+
+    QString nomNote = NOTES_NAMES[noteMidi % 12];
 
     m_labelsNotes[id]->setText(nomNote);
     m_btnAssign[id]->setText(nomNote);
@@ -557,7 +575,7 @@ void MainWindow::assignerNoteLaser(int noteIndex, bool estNoire) {
         "QPushButton:hover { border-color: #ff00ff; color: #ff00ff; }"
         );
 
-    m_engine->setNoteIndex(id, noteIndex, estNoire);
+    m_engine->setNoteIndex(id, noteMidi);
 
     resetStylePiano();
     m_laserEnAssignation = -1;

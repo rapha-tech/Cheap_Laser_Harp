@@ -31,7 +31,7 @@ private slots:
     void stopperLaser(int id);
     void eteindreBarre(int id);
     void activerAssignation(int id);
-    void assignerNoteLaser(int noteIndex, bool estNoire);
+    void assignerNoteLaser(int noteMidi);
     void nouveau();
     void actif();
     void loadSF2();
@@ -71,9 +71,8 @@ private:
     EngineLaser* m_engine;
     configFile* m_configFile;
 
-    static const QStringList NOTES_BLANCHES;
-    static const QStringList NOTES_NOIRES;
-    static const QList<int> POSITIONS_NOIRES;
+    static const QStringList NOTES_NAMES;
+    static const QList<int> IS_NOIRE;
 };
 
 #endif
