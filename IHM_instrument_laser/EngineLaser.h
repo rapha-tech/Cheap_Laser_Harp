@@ -12,7 +12,7 @@
 
 struct accord_t{
         int n_notes;
-        int notes[10];
+        int notes[24];
     };
 
 class EngineLaser : public QObject {
@@ -48,6 +48,7 @@ public:
     // Utilitaire
     int  midiNoteForLaser(int laserId);
     accord_t* getAccords();
+    void setAccords(accord_t* accordcpy);
 
     // Compatibilité ancienne interface
     void configurerNote(int laserId, const QString &chemin) { Q_UNUSED(laserId) Q_UNUSED(chemin) }

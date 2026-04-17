@@ -299,7 +299,7 @@ MainWindow::MainWindow(QWidget *parent)
             "QPushButton:hover { border-color: #ff00ff; color: #ff00ff; }"
             );
         connect(assignBtn, &QPushButton::clicked, this, [=]() {
-            activerAssignation(i);
+            toggleAssignation(i);
         });
         m_btnAssign[i] = assignBtn;
 
@@ -342,7 +342,7 @@ MainWindow::MainWindow(QWidget *parent)
             connect(blanc, &QPushButton::released, this, [=]() {
                 m_engine->stopperNoteDirecte(DEFAULT_OCTAVE + i);
                 if (m_laserEnAssignation >= 0)
-                    assignerNoteLaser(DEFAULT_OCTAVE + i);
+                    toggleTouche(DEFAULT_OCTAVE + i);
             });
             m_touchesBlanches.append(blanc);
             pianoLay->addWidget(blanc);
@@ -372,7 +372,7 @@ MainWindow::MainWindow(QWidget *parent)
             connect(noir, &QPushButton::released, this, [=]() {
                 m_engine->stopperNoteDirecte(DEFAULT_OCTAVE + i);
                 if (m_laserEnAssignation >= 0)
-                    assignerNoteLaser(DEFAULT_OCTAVE + i);
+                    toggleTouche(DEFAULT_OCTAVE + i);
             });
         }
     }
@@ -398,8 +398,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_engine, &EngineLaser::noteRecueMidi,
             this, [=](int midiNote, bool active) {
                 for (int i = 0; i < 6; i++) {
-                    accord_t* accords = m_engine->getAccords();
-                    for(int i = 0; i < accords->n_notes; i++)
+                    m_accords = m_engine->getAccords();
+                    for(int i = 0; i < m_accords->n_notes; i++)
                     {
                             if (active) allumerBarre(midiNote);
                             else        eteindreBarre(midiNote);
@@ -516,15 +516,18 @@ void MainWindow::repositionnerTouchesNoires() {
 void MainWindow::resetStylePiano() {
     for (auto t : m_touchesBlanches) t->setStyleSheet(S_BLANCHE);
     for (auto t : m_touchesNoires)   t->setStyleSheet(S_NOIRE);
+    for(int i = 0; i < NOTES_DISPLAYED; i++)
+    {
+        m_pselectedTouches[i] = 0;
+    }
 }
 
-void MainWindow::surlignerToucheAssignee(int laserId) {
-    resetStylePiano();
-    int noteMidi = m_laserNote[laserId];
+void MainWindow::toggleTouche(int noteMidi) {
     int noteId = 0;
 
     if (IS_NOIRE[noteMidi % 12])
     {
+        // we need to find the note_id in m_touchesNoires
         for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
         {
             if(IS_NOIRE[i % 12])
@@ -532,10 +535,20 @@ void MainWindow::surlignerToucheAssignee(int laserId) {
                 noteId++;
             }
         }
-        m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_SEL);
+        if(m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] == 1)
+        {
+            m_touchesNoires[noteId]->setStyleSheet(S_NOIRE);
+            m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] = 0;
+        }
+        else
+        {
+            m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_SEL);
+            m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] = 1;
+        }
     }
     else
     {
+        // we need to find the note_id in m_touchesBlanches
         for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
         {
             if(!IS_NOIRE[i % 12])
@@ -543,42 +556,61 @@ void MainWindow::surlignerToucheAssignee(int laserId) {
                 noteId++;
             }
         }
-        m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_SEL);
+        if(m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] == 1)
+        {
+            m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE);
+            m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] = 0;
+        }
+        else
+        {
+            m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_SEL);
+            m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] = 1;
+        }
     }
 }
 
-void MainWindow::activerAssignation(int laserId) {
-    m_laserEnAssignation = laserId;
-    m_btnAssign[laserId]->setText("...");
-    m_btnAssign[laserId]->setStyleSheet(
-        "QPushButton { background-color: #330033; border-radius: 4px;"
-        "  border: 1px solid #ff00ff; color: #ff00ff; font-size: 11px; }"
-    );
-    surlignerToucheAssignee(laserId);
-}
+void MainWindow::toggleAssignation(int laserId)
+{
+    if(m_laserEnAssignation == -1)
+    {
+        m_laserEnAssignation = laserId;
+        m_btnAssign[laserId]->setText("Valider");
+        m_btnAssign[laserId]->setStyleSheet(
+            "QPushButton { background-color: #00381e; border-radius: 4px;"
+            "  border: 1px solid #15fc00; color: #49ec00; font-size: 11px; }"
+            );
+        resetStylePiano();
+        // int noteMidi = m_laserNote[laserId];
 
-void MainWindow::assignerNoteLaser(int noteMidi) {
-    if (m_laserEnAssignation < 0) return;
+        m_accords = m_engine->getAccords();
+        for(int i = 0; i < m_accords[laserId].n_notes; i++)
+        {
+            toggleTouche(m_accords[laserId].notes[i]);
+        }
+    }
+    else
+    {
+        m_btnAssign[laserId]->setText("Edit");
+        m_btnAssign[m_laserEnAssignation]->setStyleSheet(
+            "QPushButton { background-color: #222; border-radius: 4px;"
+            "  border: 1px solid #444; color: #aaa; font-size: 11px; }"
+            "QPushButton:hover { border-color: #ff00ff; color: #ff00ff; }"
+            );
 
-    int id = m_laserEnAssignation;
-    m_laserNote[id] = noteMidi;
+        m_accords[laserId].n_notes = 0;
+        for(int i = 0; i < NOTES_DISPLAYED; i++)
+        {
+            if(m_pselectedTouches[i] == 1)
+            {
+                m_accords[laserId].notes[m_accords[laserId].n_notes++] = i + DEFAULT_OCTAVE;
+            }
+        }
+        m_engine->setAccords(m_accords);
+        delete m_accords;
 
-    qDebug() << m_laserEnAssignation << "note : " << noteMidi;
-
-    QString nomNote = NOTES_NAMES[noteMidi % 12];
-
-    m_labelsNotes[id]->setText(nomNote);
-    m_btnAssign[id]->setText(nomNote);
-    m_btnAssign[id]->setStyleSheet(
-        "QPushButton { background-color: #222; border-radius: 4px;"
-        "  border: 1px solid #444; color: #aaa; font-size: 11px; }"
-        "QPushButton:hover { border-color: #ff00ff; color: #ff00ff; }"
-        );
-
-    m_engine->setNoteIndex(id, noteMidi);
-
-    resetStylePiano();
-    m_laserEnAssignation = -1;
+        resetStylePiano();
+        m_laserEnAssignation = -1;
+    }
 }
 
 void MainWindow::jouerLaser(int id) {

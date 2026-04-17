@@ -120,7 +120,6 @@ QStringList EngineLaser::getInstrumentsDisponibles() const
 // ─────────────────────────────────────────────
 void EngineLaser::setNoteIndex(int laserId, int noteMidi)
 {
-    // AJOUTE : stoppe l'ancienne note avant de changer
     int ancienMidi = accords[laserId].notes[0];
     ma_mutex_lock(&m_mutex);
     tsf_note_off(m_tsf, m_instrument, ancienMidi);
@@ -288,5 +287,28 @@ void EngineLaser::loadSoundFont(QString& fileName)
 
 accord_t* EngineLaser::getAccords()
 {
-    return accords;
+    accord_t* accordcpy = new accord_t[6];
+    for(int i = 0; i < 6; i++)
+    {
+        accordcpy[i].n_notes = accords[i].n_notes;
+        for(int j = 0; j < accords[i].n_notes; j++)
+        {
+            accordcpy[i].notes[j] = accords[i].notes[j];
+        }
+    }
+    return accordcpy;
+}
+
+void  EngineLaser::setAccords(accord_t* accordcpy)
+{
+    delete accords;
+    accords = new accord_t[6];
+    for(int i = 0; i < 6; i++)
+    {
+        accords[i].n_notes = accordcpy[i].n_notes;
+        for(int j = 0; j < accordcpy[i].n_notes; j++)
+        {
+            accords[i].notes[j] = accordcpy[i].notes[j];
+        }
+    }
 }
