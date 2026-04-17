@@ -268,8 +268,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_btnLaser.resize(6);
     m_btnAssign.resize(6);
 
-    QPushButton *btn = new QPushButton;
-
     for (int i = 0; i < 6; i++) {
         QWidget *col = new QWidget();
         QVBoxLayout *colL = new QVBoxLayout(col);
@@ -797,6 +795,7 @@ void MainWindow::loadConfig()
     int instrumentId = m_configFile->get_instr_id();
     int volume = m_configFile->get_volume();
     // int port_id = m_configFile->get_port_id(); we don't change the midi port
+    accord_t* accords = m_configFile->getAccords();
 
     updateListInstruments(soundFontPath);
     m_choixInstrument->setCurrentRow(instrumentId);
@@ -804,6 +803,8 @@ void MainWindow::loadConfig()
 
     sliderVol->setValue(volume);
     m_engine->setVolume(volume / 100.0f);
+
+    m_engine->setAccords(accords);
 }
 
 void MainWindow::saveConfig()
