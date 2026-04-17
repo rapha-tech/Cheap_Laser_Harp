@@ -21,16 +21,27 @@ configFile::configFile(QString& conFigFilePath)
     volume = 80;
     port_id = 0;
 
+    int default_notes[] = {60, 62, 64, 65, 66, 68};
+    accord_t* accords = new accord_t[6];
+
+    for(int i = 0; i < 6; i++)
+    {
+        accords[i].n_notes = 1;
+        accords[i].notes[0] = default_notes[i];
+    }
+
     // Read the JSON file
     yyjson_doc *doc = yyjson_read_file(conFigFilePath.toLocal8Bit().constData(), 0, NULL, NULL);
 
     // Iterate over the root object
-    if (doc) {
+    if (doc)
+    {
         yyjson_val *obj = yyjson_doc_get_root(doc);
         yyjson_obj_iter iter;
         yyjson_obj_iter_init(obj, &iter);
         yyjson_val *key, *val;
-        while ((key = yyjson_obj_iter_next(&iter))) {
+        while ((key = yyjson_obj_iter_next(&iter)))
+        {
             if(!strcmp(yyjson_get_str(key), "soundfont_path"))
             {
                 val = yyjson_obj_iter_get_val(key);
@@ -51,6 +62,30 @@ configFile::configFile(QString& conFigFilePath)
                 val = yyjson_obj_iter_get_val(key);
                 port_id = yyjson_get_uint(val);
             }
+            else if(!strcmp(yyjson_get_str(key), "notes_laser_0"))
+            {
+                setAccord(key, accords, 0);
+            }
+            else if(!strcmp(yyjson_get_str(key), "notes_laser_1"))
+            {
+                setAccord(key, accords, 1);
+            }
+            else if(!strcmp(yyjson_get_str(key), "notes_laser_2"))
+            {
+                setAccord(key, accords, 2);
+            }
+            else if(!strcmp(yyjson_get_str(key), "notes_laser_3"))
+            {
+                setAccord(key, accords, 3);
+            }
+            else if(!strcmp(yyjson_get_str(key), "notes_laser_4"))
+            {
+                setAccord(key, accords, 4);
+            }
+            else if(!strcmp(yyjson_get_str(key), "notes_laser_5"))
+            {
+                setAccord(key, accords, 5);
+            }
         }
     } else {
         printf("read error");
@@ -58,6 +93,19 @@ configFile::configFile(QString& conFigFilePath)
 
     // Free the doc
     yyjson_doc_free(doc);
+}
+
+void configFile::setAccord(yyjson_val* key, accord_t* accords, int id_laser)
+{
+    yyjson_val *val;
+    yyjson_val *arr = yyjson_obj_iter_get_val(key);
+    yyjson_arr_iter iter = yyjson_arr_iter_with(arr);
+    int i = 0;
+    while ((val = yyjson_arr_iter_next(&iter)))
+    {
+        accords[id_laser].notes[i++] = yyjson_get_uint(val);
+    }
+    accords[id_laser].n_notes = i;
 }
 
 
@@ -87,11 +135,25 @@ void configFile::write(QString& conFigFilePath)
 
     // notes arrays
     yyjson_mut_val *notes_arr_0 = yyjson_mut_arr(doc);
-    yyjson_mut_val *value00 = yyjson_mut_int(doc, 53);
-    yyjson_mut_val *value01 = yyjson_mut_int(doc, 55);
-    yyjson_mut_arr_append(notes_arr_0, value00);
-    yyjson_mut_arr_append(notes_arr_0, value01);
+    yyjson_mut_val *notes_arr_1 = yyjson_mut_arr(doc);
+    yyjson_mut_val *notes_arr_2 = yyjson_mut_arr(doc);
+    yyjson_mut_val *notes_arr_3 = yyjson_mut_arr(doc);
+    yyjson_mut_val *notes_arr_4 = yyjson_mut_arr(doc);
+    yyjson_mut_val *notes_arr_5 = yyjson_mut_arr(doc);
+
+    addNotesArray(doc, notes_arr_0, 0);
+    addNotesArray(doc, notes_arr_1, 1);
+    addNotesArray(doc, notes_arr_2, 2);
+    addNotesArray(doc, notes_arr_3, 3);
+    addNotesArray(doc, notes_arr_4, 4);
+    addNotesArray(doc, notes_arr_5, 5);
+
     yyjson_mut_obj_add(root, yyjson_mut_str(doc, "notes_laser_0"), notes_arr_0);
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "notes_laser_1"), notes_arr_1);
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "notes_laser_2"), notes_arr_2);
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "notes_laser_3"), notes_arr_3);
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "notes_laser_4"), notes_arr_4);
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "notes_laser_5"), notes_arr_5);
 
     // Set the document's root value.
     yyjson_mut_doc_set_root(doc, root);
@@ -102,6 +164,16 @@ void configFile::write(QString& conFigFilePath)
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);
+}
+
+void configFile::addNotesArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, int id_laser)
+{
+    yyjson_mut_val *value;
+    for(int i = 0; i < m_accords[id_laser].n_notes; i++)
+    {
+        value = yyjson_mut_int(doc, m_accords[id_laser].notes[i]);
+        yyjson_mut_arr_append(arr, value);
+    }
 }
 
 QString configFile::get_soundFont_path()

@@ -3,6 +3,7 @@
 
 #include "lib/yyjson.h"
 
+#include <EngineLaser.h>
 #include <QString>
 
 class configFile
@@ -12,10 +13,12 @@ private:
     int instrument_id;
     int volume;
     int port_id;
+    accord_t* m_accords;
 
 public:
     configFile(QString&);
-
+    void setAccord(yyjson_val* key, accord_t* accords, int id_laser);
+    void addNotesArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, int id_laser);
     void write(QString&);
 
     QString get_soundFont_path();
