@@ -10,6 +10,11 @@
 #include "lib/tsf.h"
 #include "lib/RtMidi.h"
 
+struct accord_t{
+        int n_notes;
+        int notes[10];
+    };
+
 class EngineLaser : public QObject {
     Q_OBJECT
 public:
@@ -42,6 +47,7 @@ public:
 
     // Utilitaire
     int  midiNoteForLaser(int laserId);
+    accord_t* getAccords();
 
     // Compatibilité ancienne interface
     void configurerNote(int laserId, const QString &chemin) { Q_UNUSED(laserId) Q_UNUSED(chemin) }
@@ -62,6 +68,7 @@ private:
     ma_device       m_device;
     ma_mutex        m_mutex;
     bool            m_audioOk   = false;
+    accord_t*       accords;
 
     QMap<int, int>  m_laserMidiNote;
     float           m_volume    = 0.8f;

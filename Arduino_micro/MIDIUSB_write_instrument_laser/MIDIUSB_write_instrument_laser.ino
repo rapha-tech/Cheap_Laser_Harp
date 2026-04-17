@@ -17,7 +17,7 @@
 
 int buttons_pins[6] = {BUTTON_PIN_0, BUTTON_PIN_1, BUTTON_PIN_2, BUTTON_PIN_3, BUTTON_PIN_4, BUTTON_PIN_5};
 int old_states[6] = {0, 0, 0, 0, 0, 0};
-int notes[] = {60, 62, 64, 65, 67, 69};
+int notes[] = {0, 1, 2, 3, 4, 5};
 
 // First parameter is the event type (0x09 = note on, 0x08 = note off).
 // Second parameter is note-on/note-off, combined with the channel.

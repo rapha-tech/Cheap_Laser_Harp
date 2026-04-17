@@ -93,8 +93,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_engine->initEngine(soundFontPath);
 
 
-    for (int i = 1; i <= 6; i++) {
-        m_laserNote[i]         = i - 1;
+    for (int i = 0; i < 6; i++) {
+        m_laserNote[i]         = i;
         m_laserNoteEstNoire[i] = false;
     }
 
@@ -153,12 +153,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(reinitialiser,
             &QAction::triggered, this, [=]() {
-                for (int i = 1; i <= 6; i++) {
-                    m_laserNote[i] = i - 1;
+                for (int i = 0; i < 6; i++) {
+                    m_laserNote[i] = i;
                     m_laserNoteEstNoire[i] = false;
-                    m_engine->setNoteIndex(i, i - 1, false);
-                    m_btnAssign[i-1]->setText(NOTES_BLANCHES[i-1]);
-                    m_labelsNotes[i-1]->setText(NOTES_BLANCHES[i-1]);
+                    m_engine->setNoteIndex(i, i, false);
+                    m_btnAssign[i]->setText(NOTES_BLANCHES[i]);
+                    m_labelsNotes[i]->setText(NOTES_BLANCHES[i]);
                 }
             });
     mLasers->addAction("&Parametres...");
@@ -260,7 +260,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_btnLaser.resize(6);
     m_btnAssign.resize(6);
 
-    for (int i = 1; i <= 6; i++) {
+    for (int i = 0; i < 6; i++) {
         QWidget *col = new QWidget();
         QVBoxLayout *colL = new QVBoxLayout(col);
         colL->setContentsMargins(3, 0, 3, 0);
@@ -271,7 +271,7 @@ MainWindow::MainWindow(QWidget *parent)
         barre->setMinimumHeight(100);
         barre->setFixedWidth(12);
         barre->setStyleSheet("background-color: #222; border-radius: 5px;");
-        m_barres[i - 1] = barre;
+        m_barres[i] = barre;
 
         QPushButton *btn = new QPushButton(QString("Laser %1").arg(i));
 
@@ -292,9 +292,9 @@ MainWindow::MainWindow(QWidget *parent)
             stopperLaser(i);
             eteindreBarre(i);
         });
-        m_btnLaser[i - 1] = btn;
+        m_btnLaser[i] = btn;
 
-        QPushButton *assignBtn = new QPushButton(NOTES_BLANCHES[i - 1]);
+        QPushButton *assignBtn = new QPushButton(NOTES_BLANCHES[i]);
         assignBtn->setMinimumHeight(28);
         btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         assignBtn->setStyleSheet(
@@ -305,7 +305,7 @@ MainWindow::MainWindow(QWidget *parent)
         connect(assignBtn, &QPushButton::clicked, this, [=]() {
             activerAssignation(i);
         });
-        m_btnAssign[i - 1] = assignBtn;
+        m_btnAssign[i] = assignBtn;
 
         colL->addWidget(barre, 50, Qt::AlignHCenter);
         colL->addWidget(btn, 30);
@@ -396,11 +396,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(m_engine, &EngineLaser::noteRecueMidi,
             this, [=](int midiNote, bool active) {
-                for (int i = 1; i <= 6; i++) {
-                    if (m_engine->midiNoteForLaser(i) == midiNote) {
-                        if (active) allumerBarre(i);
-                        else        eteindreBarre(i);
+                for (int i = 0; i < 6; i++) {
+                    accord_t* accords = m_engine->getAccords();
+                    for(int i = 0; i < accords->n_notes; i++)
+                    {
+                            if (active) allumerBarre(midiNote);
+                            else        eteindreBarre(midiNote);
                     }
+                    
                 }
             });
 
@@ -523,10 +526,10 @@ void MainWindow::activerAssignation(int laserId) {
     m_laserEnAssignation = laserId;
 
     for (int i = 0; i < 6; i++) {
-        bool actif = (i + 1 == laserId);
-        QString note = m_laserNoteEstNoire[i+1]
-                           ? NOTES_NOIRES[m_laserNote[i+1]]
-                           : NOTES_BLANCHES[m_laserNote[i+1]];
+        bool actif = (i == laserId);
+        QString note = m_laserNoteEstNoire[i]
+                           ? NOTES_NOIRES[m_laserNote[i]]
+                           : NOTES_BLANCHES[m_laserNote[i]];
         m_btnAssign[i]->setText(actif ? "..." : note);
         m_btnAssign[i]->setStyleSheet(
             actif
@@ -551,9 +554,9 @@ void MainWindow::assignerNoteLaser(int noteIndex, bool estNoire) {
                           ? NOTES_NOIRES[noteIndex]
                           : NOTES_BLANCHES[noteIndex];
 
-    m_labelsNotes[id - 1]->setText(nomNote);
-    m_btnAssign[id - 1]->setText(nomNote);
-    m_btnAssign[id - 1]->setStyleSheet(
+    m_labelsNotes[id]->setText(nomNote);
+    m_btnAssign[id]->setText(nomNote);
+    m_btnAssign[id]->setStyleSheet(
         "QPushButton { background-color: #222; border-radius: 4px;"
         "  border: 1px solid #444; color: #aaa; font-size: 11px; }"
         "QPushButton:hover { border-color: #ff00ff; color: #ff00ff; }"
@@ -575,12 +578,12 @@ void MainWindow::stopperLaser(int id) {
 
 // ─────────────────────────────────────────────
 void MainWindow::allumerBarre(int id) {
-    m_barres[id-1]->setStyleSheet(
+    m_barres[id]->setStyleSheet(
         "background-color: #ff00ff; border-radius: 5px;");
 }
 
 void MainWindow::eteindreBarre(int id) {
-    m_barres[id-1]->setStyleSheet(
+    m_barres[id]->setStyleSheet(
         "background-color: #222; border-radius: 5px;");
 }
 

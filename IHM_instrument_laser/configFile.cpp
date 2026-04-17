@@ -1,4 +1,4 @@
-#include "configfile.h"
+#include "configFile.h"
 
 //     {
 //        "soundfont_path": "C:\Users\Documents\sf2\Vintage.sf2",
