@@ -97,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
     int instrumentId = m_configFile->get_instr_id();
     int volume = m_configFile->get_volume();
     int port_id = m_configFile->get_port_id();
+    accord_t* accords = m_configFile->getAccords();
 
     m_engine = new EngineLaser(this);
     m_engine->initEngine(soundFontPath);
@@ -446,6 +447,8 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("Instrument Laser");
     setMinimumSize(700, 480);
 
+    m_engine->setAccords(accords);
+
     QTimer::singleShot(0, this, [this]() {
         repositionnerTouchesNoires();
     });
@@ -602,6 +605,9 @@ void MainWindow::toggleAssignation(int laserId)
         resetStylePiano();
         // int noteMidi = m_laserNote[laserId];
 
+        if(m_accords != nullptr)
+            delete m_accords;
+
         m_accords = m_engine->getAccords();
         for(int i = 0; i < m_accords[laserId].n_notes; i++)
         {
@@ -626,7 +632,7 @@ void MainWindow::toggleAssignation(int laserId)
             }
         }
         m_engine->setAccords(m_accords);
-        delete m_accords;
+        m_configFile->set_accords(m_accords);
 
         resetStylePiano();
         m_laserEnAssignation = -1;

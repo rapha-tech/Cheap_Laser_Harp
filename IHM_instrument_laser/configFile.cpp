@@ -21,13 +21,13 @@ configFile::configFile(QString& conFigFilePath)
     volume = 80;
     port_id = 0;
 
-    int default_notes[] = {60, 62, 64, 65, 66, 68};
-    accord_t* accords = new accord_t[6];
+    int default_notes[] = {60, 62, 64, 65, 67, 69};
+    m_accords = new accord_t[6];
 
     for(int i = 0; i < 6; i++)
     {
-        accords[i].n_notes = 1;
-        accords[i].notes[0] = default_notes[i];
+        m_accords[i].n_notes = 1;
+        m_accords[i].notes[0] = default_notes[i];
     }
 
     // Read the JSON file
@@ -64,27 +64,27 @@ configFile::configFile(QString& conFigFilePath)
             }
             else if(!strcmp(yyjson_get_str(key), "notes_laser_0"))
             {
-                setAccord(key, accords, 0);
+                setAccordJson(key, m_accords, 0);
             }
             else if(!strcmp(yyjson_get_str(key), "notes_laser_1"))
             {
-                setAccord(key, accords, 1);
+                setAccordJson(key, m_accords, 1);
             }
             else if(!strcmp(yyjson_get_str(key), "notes_laser_2"))
             {
-                setAccord(key, accords, 2);
+                setAccordJson(key, m_accords, 2);
             }
             else if(!strcmp(yyjson_get_str(key), "notes_laser_3"))
             {
-                setAccord(key, accords, 3);
+                setAccordJson(key, m_accords, 3);
             }
             else if(!strcmp(yyjson_get_str(key), "notes_laser_4"))
             {
-                setAccord(key, accords, 4);
+                setAccordJson(key, m_accords, 4);
             }
             else if(!strcmp(yyjson_get_str(key), "notes_laser_5"))
             {
-                setAccord(key, accords, 5);
+                setAccordJson(key, m_accords, 5);
             }
         }
     } else {
@@ -95,7 +95,7 @@ configFile::configFile(QString& conFigFilePath)
     yyjson_doc_free(doc);
 }
 
-void configFile::setAccord(yyjson_val* key, accord_t* accords, int id_laser)
+void configFile::setAccordJson(yyjson_val* key, accord_t* accords, int id_laser)
 {
     yyjson_val *val;
     yyjson_val *arr = yyjson_obj_iter_get_val(key);
@@ -196,6 +196,20 @@ int configFile::get_port_id()
     return port_id;
 }
 
+accord_t* configFile::getAccords()
+{
+    accord_t* accordcpy = new accord_t[6];
+    for(int i = 0; i < 6; i++)
+    {
+        accordcpy[i].n_notes = m_accords[i].n_notes;
+        for(int j = 0; j < m_accords[i].n_notes; j++)
+        {
+            accordcpy[i].notes[j] = m_accords[i].notes[j];
+        }
+    }
+    return accordcpy;
+}
+
 
 void configFile::set_soundFont_path(QString& path)
 {
@@ -215,4 +229,18 @@ void configFile::set_volume(int vol)
 void configFile::set_port_id(int id)
 {
     port_id = id;
+}
+
+void configFile::set_accords(accord_t* accordcpy)
+{
+    delete m_accords;
+    m_accords = new accord_t[6];
+    for(int i = 0; i < 6; i++)
+    {
+        m_accords[i].n_notes = accordcpy[i].n_notes;
+        for(int j = 0; j < accordcpy[i].n_notes; j++)
+        {
+            m_accords[i].notes[j] = accordcpy[i].notes[j];
+        }
+    }
 }
