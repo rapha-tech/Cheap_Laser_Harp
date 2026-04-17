@@ -102,11 +102,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_engine = new EngineLaser(this);
     m_engine->initEngine(soundFontPath);
 
-
-    for (int i = 0; i < 6; i++) {
-        m_laserNote[i] = DEFAULT_OCTAVE + i;
-    }
-
     QMenu *mFichier = menuBar()->addMenu("&Fichier");
     QAction *actionnv = new QAction("&Nouveau projet ", this);
     mFichier->addAction(actionnv);
@@ -163,10 +158,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(reinitialiser,
             &QAction::triggered, this, [=]() {
                 for (int i = 0; i < 6; i++) {
-                    m_laserNote[i] = DEFAULT_OCTAVE + i;
-                    m_engine->setNoteIndex(i, DEFAULT_OCTAVE + i);
-                    m_btnAssign[i]->setText(NOTES_NAMES[(DEFAULT_OCTAVE + i) % 12]);
-                    m_labelsNotes[i]->setText(NOTES_NAMES[(DEFAULT_OCTAVE + i) % 12]);
+                    // TODO : make a function "get_default_accord" in configFile
+                    int default_notes[] = {60, 62, 64, 65, 67, 69};
+                    m_accords = new accord_t[6];
+
+                    for(int i = 0; i < 6; i++)
+                    {
+                        m_accords[i].n_notes = 1;
+                        m_accords[i].notes[0] = default_notes[i];
+                    }
+                    m_engine->setAccords(m_accords);
+                    delete m_accords;
                 }
             });
     mLasers->addAction("&Parametres...");
@@ -601,7 +603,7 @@ void MainWindow::toggleAssignation(int laserId)
             "  border: 1px solid #15fc00; color: #49ec00; font-size: 11px; }"
             );
         resetStylePiano();
-        // int noteMidi = m_laserNote[laserId];
+
 
         if(m_accords != nullptr)
             delete m_accords;
