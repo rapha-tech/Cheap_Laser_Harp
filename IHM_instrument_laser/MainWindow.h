@@ -68,6 +68,8 @@ private:
     QListWidget* m_choixInstrument;
     QVector<QLabel*> m_labelsNotes;
 
+    QList<int> notesSelectionnees;
+
     EngineLaser* m_engine;
     configFile* m_configFile;
 

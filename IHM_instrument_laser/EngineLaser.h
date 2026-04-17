@@ -18,6 +18,8 @@ struct accord_t{
 class EngineLaser : public QObject {
     Q_OBJECT
 public:
+    int  noteIndexToMidi(int noteIndex, bool estNoire);
+
     explicit EngineLaser(QObject *parent);
     ~EngineLaser();
     bool initEngine(QString& soundFontPath);
@@ -56,7 +58,6 @@ signals:
     void noteRecueMidi(int note, bool active);
 
 private:
-    int  noteIndexToMidi(int noteIndex, bool estNoire);
 
     static void audioCallback(ma_device* dev, void* out,
                               const void* in, ma_uint32 frames);

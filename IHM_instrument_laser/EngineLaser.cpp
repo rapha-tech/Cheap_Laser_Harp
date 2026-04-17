@@ -22,14 +22,6 @@ EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
     {
         accords[i].n_notes = 1;
         accords[i].notes[0] = 60 + i;
-
-        if(i == 2)
-        {
-            accords[i].notes[1] = 66;
-            accords[i].notes[2] = 70;
-            accords[i].notes[3] = 73;
-            accords[i].n_notes = 4;
-        }
     }
 
     m_audioOk = false;
