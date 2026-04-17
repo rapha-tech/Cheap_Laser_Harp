@@ -46,6 +46,12 @@ static const QString S_BLANCHE_SEL =
      " border: 2px solid rgba(100, 150, 255, 220);" // contour lumineux
     "}";
 
+static const QString S_BLANCHE_PLAY =
+    "QPushButton {"
+    " background-color: #ff00ff;" // violet
+    " border: 1px solid #000000;" // contour noir
+    "}";
+
 static const QString S_NOIRE =
     "QPushButton {"
     "  background-color: #111;"
@@ -67,6 +73,12 @@ static const QString S_NOIRE_SEL =
     "QPushButton {"
     "background-color: rgba(60, 90, 150, 255);"
     " border: 2px solid rgba(100, 150, 255, 220);" // contour lumineux
+    "}";
+
+static const QString S_NOIRE_PLAY =
+    "QPushButton {"
+    "background-color: #ff00ff;"  // violet
+    " border: 1px solid #000000;" // contour noir
     "}";
 
 MainWindow::MainWindow(QWidget *parent)
@@ -290,7 +302,7 @@ MainWindow::MainWindow(QWidget *parent)
         });
         m_btnLaser[i] = btn;
 
-        QPushButton *assignBtn = new QPushButton(NOTES_NAMES[(DEFAULT_OCTAVE + i) % 12]);
+        QPushButton *assignBtn = new QPushButton("Edit");
         assignBtn->setMinimumHeight(28);
         btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         assignBtn->setStyleSheet(
@@ -623,6 +635,41 @@ void MainWindow::stopperLaser(int id) {
 
 // ─────────────────────────────────────────────
 void MainWindow::allumerBarre(int id) {
+    m_accords = m_engine->getAccords();
+
+    for(int i = 0; i < m_accords[id].n_notes; i++)
+    {
+
+        int noteMidi = m_accords[id].notes[i];
+        int noteId = 0;
+
+        if (IS_NOIRE[noteMidi % 12])
+        {
+            // we need to find the note_id in m_touchesNoires
+            for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
+            {
+                if(IS_NOIRE[i % 12])
+                {
+                    noteId++;
+                }
+            }
+            m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_PLAY);
+        }
+        else
+        {
+            // we need to find the note_id in m_touchesBlanches
+            for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
+            {
+                if(!IS_NOIRE[i % 12])
+                {
+                    noteId++;
+                }
+            }
+            m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_PLAY);
+        }
+    }
+
+
     m_barres[id]->setStyleSheet(
         "background-color: #ff00ff; border-radius: 5px;");
 }
@@ -630,6 +677,7 @@ void MainWindow::allumerBarre(int id) {
 void MainWindow::eteindreBarre(int id) {
     m_barres[id]->setStyleSheet(
         "background-color: #222; border-radius: 5px;");
+    resetStylePiano();
 }
 
 // ─────────────────────────────────────────────
