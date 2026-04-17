@@ -10,25 +10,25 @@
 #include "lib/tsf.h"
 #include "lib/RtMidi.h"
 
-struct accord_t{
-        int n_notes;
-        int notes[24];
-    };
+struct accord_t
+{
+    int n_notes;
+    int notes[24];
+};
 
 class EngineLaser : public QObject {
     Q_OBJECT
 public:
-    int  noteIndexToMidi(int noteIndex, bool estNoire);
-
     explicit EngineLaser(QObject *parent);
     ~EngineLaser();
     bool initEngine(QString& soundFontPath);
     bool isAudioOk();
 
     // Instrument
-    void         chargerInstrument(int idInstrument);
+    void         loadSoundFont(QString&);
     QStringList  getInstrumentsDisponibles() const;
-    void loadSoundFont(QString&);
+    void         chargerInstrument(int idInstrument);
+
 
     // Notes lasers
     void jouerNote(int laserId);
@@ -42,17 +42,13 @@ public:
     void setVolume(float niveau);
 
     // MIDI
+    QStringList getMidiPorts();
     bool initMidi(unsigned int id = 0);
     void stopMidi();
-    QStringList getMidiPorts();
 
     // Utilitaire
-    int  midiNoteForLaser(int laserId);
     accord_t* getAccords();
     void setAccords(accord_t* accordcpy);
-
-    // Compatibilité ancienne interface
-    void configurerNote(int laserId, const QString &chemin) { Q_UNUSED(laserId) Q_UNUSED(chemin) }
 
 signals:
     void noteRecueMidi(int note, bool active);
@@ -69,15 +65,12 @@ private:
     ma_device       m_device;
     ma_mutex        m_mutex;
     bool            m_audioOk   = false;
-    accord_t*       accords;
 
-    QMap<int, int>  m_laserMidiNote;
+    accord_t*       m_accords;
     float           m_volume    = 0.8f;
     int             m_instrument= 0;
 
     RtMidiIn*       m_midiIn    = nullptr;
-
-    static const int MIDI_BASE = 60;
 };
 
 #endif

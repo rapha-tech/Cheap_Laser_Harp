@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QListWidget>
+
 #include "EngineLaser.h"
 #include "configFile.h"
 
@@ -26,9 +27,9 @@ protected:
 
 private slots:
     void fermer();
-    void allumerBarre(int id);
     void jouerLaser(int id);
     void stopperLaser(int id);
+    void allumerBarre(int id);
     void eteindreBarre(int id);
     void toggleAssignation(int id);
     void toggleTouche(int noteMidi);
@@ -47,7 +48,7 @@ private:
     void repositionnerTouchesNoires();
     void resetStylePiano();
 
-    QString configPath;
+    QString m_configPath;
 
     QMenu *mListePeripheriques;
     QSlider *sliderVol;
@@ -67,13 +68,14 @@ private:
     QListWidget* m_choixInstrument;
     QVector<QLabel*> m_labelsNotes;
 
-    QList<int> notesSelectionnees;
-
     EngineLaser* m_engine;
     configFile* m_configFile;
 
     static const QStringList NOTES_NAMES;
     static const QList<int> IS_NOIRE;
+
+    QMap<int, int> NOTE_MIDI_TO_ID_TOUCHE_NOIRE;
+    QMap<int, int> NOTE_MIDI_TO_ID_TOUCHE_BLANCHE;
 };
 
 #endif

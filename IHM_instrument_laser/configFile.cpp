@@ -21,14 +21,7 @@ configFile::configFile(QString& conFigFilePath)
     volume = 80;
     port_id = 0;
 
-    int default_notes[] = {60, 62, 64, 65, 67, 69};
-    m_accords = new accord_t[6];
-
-    for(int i = 0; i < 6; i++)
-    {
-        m_accords[i].n_notes = 1;
-        m_accords[i].notes[0] = default_notes[i];
-    }
+    m_accords = get_default_accord();
 
     // Read the JSON file
     yyjson_doc *doc = yyjson_read_file(conFigFilePath.toLocal8Bit().constData(), 0, NULL, NULL);
@@ -208,6 +201,19 @@ accord_t* configFile::getAccords()
         }
     }
     return accordcpy;
+}
+
+accord_t* configFile::get_default_accord()
+{
+    int default_notes[] = {60, 62, 64, 65, 67, 69};
+    accord_t* accords = new accord_t[6];
+
+    for(int i = 0; i < 6; i++)
+    {
+        accords[i].n_notes = 1;
+        accords[i].notes[0] = default_notes[i];
+    }
+    return accords;
 }
 
 

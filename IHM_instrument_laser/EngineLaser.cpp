@@ -4,24 +4,16 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "lib/miniaudio.h"
 
-const int EngineLaser::MIDI_BASE;
-
 #define TSF_IMPLEMENTATION
 #include "lib/tsf.h"
 
-// Offsets MIDI depuis Do4 (60)
-// Blanches : Do Re Mi Fa Sol La Si Do Re Mi Fa Sol
-static const int MIDI_BLANC[] = {0,2,4,5,7,9,11,12,14,16,17,19};
-// Noires   : Do# Re# -  Fa# Sol# La# -  Do# Re# -  Fa# -
-static const int MIDI_NOIR[]  = {1,3,-1,6,8,10,-1,13,15,-1,18,-1};
-
 EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
 {
-    accords = new accord_t[6];
+    m_accords = new accord_t[6];
     for(int i = 0; i < 6; i++)
     {
-        accords[i].n_notes = 1;
-        accords[i].notes[0] = 60 + i;
+        m_accords[i].n_notes = 1;
+        m_accords[i].notes[0] = 60 + i;
     }
 
     m_audioOk = false;
@@ -122,9 +114,9 @@ void EngineLaser::jouerNote(int laserId)
 {
     if (!m_audioOk || !m_tsf) return;
     ma_mutex_lock(&m_mutex);
-    for(int i = 0; i < accords[laserId].n_notes; i++)
+    for(int i = 0; i < m_accords[laserId].n_notes; i++)
     {
-        tsf_note_on(m_tsf, m_instrument, accords[laserId].notes[i], m_volume);
+        tsf_note_on(m_tsf, m_instrument, m_accords[laserId].notes[i], m_volume);
     }
     ma_mutex_unlock(&m_mutex);
 }
@@ -133,9 +125,9 @@ void EngineLaser::stopperNote(int laserId)
 {
     if (!m_audioOk || !m_tsf) return;
     ma_mutex_lock(&m_mutex);
-    for(int i = 0; i < accords[laserId].n_notes; i++)
+    for(int i = 0; i < m_accords[laserId].n_notes; i++)
     {
-        tsf_note_off(m_tsf, m_instrument, accords[laserId].notes[i]);
+        tsf_note_off(m_tsf, m_instrument, m_accords[laserId].notes[i]);
     }
     ma_mutex_unlock(&m_mutex);
 }
@@ -242,9 +234,9 @@ void EngineLaser::midiCallback(double /*dt*/,
     if (status == 0x90 && velocity > 0)
     {
         ma_mutex_lock(&self->m_mutex);
-        for(int i = 0; i < self->accords[index_touche].n_notes; i++)
+        for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
         {
-            tsf_note_on(self->m_tsf, self->m_instrument, self->accords[index_touche].notes[i], self->m_volume);
+            tsf_note_on(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i], self->m_volume);
         }
         ma_mutex_unlock(&self->m_mutex);
         emit self->noteRecueMidi(index_touche, true);
@@ -252,9 +244,9 @@ void EngineLaser::midiCallback(double /*dt*/,
     else if (status == 0x80 || (status == 0x90 && velocity == 0))
     {
         ma_mutex_lock(&self->m_mutex);
-        for(int i = 0; i < self->accords[index_touche].n_notes; i++)
+        for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
         {
-            tsf_note_off(self->m_tsf, self->m_instrument, self->accords[index_touche].notes[i]);
+            tsf_note_off(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i]);
         }
         ma_mutex_unlock(&self->m_mutex);
         emit self->noteRecueMidi(index_touche, false);
@@ -279,10 +271,10 @@ accord_t* EngineLaser::getAccords()
     accord_t* accordcpy = new accord_t[6];
     for(int i = 0; i < 6; i++)
     {
-        accordcpy[i].n_notes = accords[i].n_notes;
-        for(int j = 0; j < accords[i].n_notes; j++)
+        accordcpy[i].n_notes = m_accords[i].n_notes;
+        for(int j = 0; j < m_accords[i].n_notes; j++)
         {
-            accordcpy[i].notes[j] = accords[i].notes[j];
+            accordcpy[i].notes[j] = m_accords[i].notes[j];
         }
     }
     return accordcpy;
@@ -290,14 +282,14 @@ accord_t* EngineLaser::getAccords()
 
 void  EngineLaser::setAccords(accord_t* accordcpy)
 {
-    delete accords;
-    accords = new accord_t[6];
+    delete m_accords;
+    m_accords = new accord_t[6];
     for(int i = 0; i < 6; i++)
     {
-        accords[i].n_notes = accordcpy[i].n_notes;
+        m_accords[i].n_notes = accordcpy[i].n_notes;
         for(int j = 0; j < accordcpy[i].n_notes; j++)
         {
-            accords[i].notes[j] = accordcpy[i].notes[j];
+            m_accords[i].notes[j] = accordcpy[i].notes[j];
         }
     }
 }

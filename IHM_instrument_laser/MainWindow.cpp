@@ -7,7 +7,6 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QGridLayout>
 #include <QFrame>
 #include <QMessageBox>
 #include <QDebug>
@@ -88,9 +87,32 @@ MainWindow::MainWindow(QWidget *parent)
     //this->setStyleSheet("QWidget { background-image: url(:/1.png); }");
     //this->setStyleSheet("MainWindow { background-image: url(:/1.png); }");
 
+
+    // we precompute the mapping on startup to save time during real time operation
+    int noteIdNoire;
+    int noteIdBlanche;
+    for(int i = 0; i < NOTES_DISPLAYED; i++)
+    {
+        noteIdNoire = 0;
+        noteIdBlanche = 0;
+        for(int j = 0; j < i; j++)
+        {
+            if(IS_NOIRE[j % 12])
+            {
+                noteIdNoire++;
+            }
+            else
+            {
+                noteIdBlanche++;
+            }
+        }
+        NOTE_MIDI_TO_ID_TOUCHE_NOIRE[i] = noteIdNoire;
+        NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[i] = noteIdBlanche;
+    }
+
     // load config file
-    configPath = QString("config.json");
-    m_configFile = new configFile(configPath);
+    m_configPath = QString("config.json");
+    m_configFile = new configFile(m_configPath);
 
     // get settings
     QString soundFontPath = m_configFile->get_soundFont_path();
@@ -158,15 +180,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(reinitialiser,
             &QAction::triggered, this, [=]() {
                 for (int i = 0; i < 6; i++) {
-                    // TODO : make a function "get_default_accord" in configFile
-                    int default_notes[] = {60, 62, 64, 65, 67, 69};
-                    m_accords = new accord_t[6];
-
-                    for(int i = 0; i < 6; i++)
-                    {
-                        m_accords[i].n_notes = 1;
-                        m_accords[i].notes[0] = default_notes[i];
-                    }
+                    m_accords = m_configFile->get_default_accord();
                     m_engine->setAccords(m_accords);
                     delete m_accords;
                 }
@@ -547,17 +561,12 @@ void MainWindow::resetStylePiano() {
 
 void MainWindow::toggleTouche(int noteMidi) {
     int noteId = 0;
+    int modulo_note = noteMidi % 12;
 
-    if (IS_NOIRE[noteMidi % 12])
+    if (IS_NOIRE[modulo_note])
     {
-        // we need to find the note_id in m_touchesNoires
-        for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
-        {
-            if(IS_NOIRE[i % 12])
-            {
-                noteId++;
-            }
-        }
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[modulo_note];
+
         if(m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] == 1)
         {
             m_touchesNoires[noteId]->setStyleSheet(S_NOIRE);
@@ -571,14 +580,8 @@ void MainWindow::toggleTouche(int noteMidi) {
     }
     else
     {
-        // we need to find the note_id in m_touchesBlanches
-        for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
-        {
-            if(!IS_NOIRE[i % 12])
-            {
-                noteId++;
-            }
-        }
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[modulo_note];
+
         if(m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] == 1)
         {
             m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE);
@@ -657,28 +660,16 @@ void MainWindow::allumerBarre(int id) {
         int noteMidi = m_accords[id].notes[i];
         int noteId = 0;
 
-        if (IS_NOIRE[noteMidi % 12])
+        int modulo_note = noteMidi % 12;
+
+        if (IS_NOIRE[modulo_note])
         {
-            // we need to find the note_id in m_touchesNoires
-            for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
-            {
-                if(IS_NOIRE[i % 12])
-                {
-                    noteId++;
-                }
-            }
+            noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[modulo_note];
             m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_PLAY);
         }
         else
         {
-            // we need to find the note_id in m_touchesBlanches
-            for(int i = DEFAULT_OCTAVE; i < noteMidi; i++)
-            {
-                if(!IS_NOIRE[i % 12])
-                {
-                    noteId++;
-                }
-            }
+            noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[modulo_note];
             m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_PLAY);
         }
     }
@@ -699,7 +690,7 @@ void MainWindow::fermer() {
     if (QMessageBox::warning(this, "Quitter", "Fermer l'application ?", QMessageBox:: Yes | QMessageBox:: No)
         == QMessageBox::Yes)
     {
-        m_configFile->write(configPath);
+        m_configFile->write(m_configPath);
         close();
     }
 }
@@ -791,7 +782,7 @@ void MainWindow::loadConfig()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open configuration file"), "", tr("Configuration file (*.json)"));
     delete m_configFile;
     m_configFile = new configFile(fileName);
-    configPath = fileName;
+    m_configPath = fileName;
 
     QString soundFontPath = m_configFile->get_soundFont_path();
     int instrumentId = m_configFile->get_instr_id();
@@ -811,12 +802,12 @@ void MainWindow::loadConfig()
 
 void MainWindow::saveConfig()
 {
-    m_configFile->write(configPath);
+    m_configFile->write(m_configPath);
 }
 
 void MainWindow::saveConfigAs()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save configuration file"), "config.json", tr("Configuration file (*.json)"));
     m_configFile->write(fileName);
-    configPath = fileName;
+    m_configPath = fileName;
 }

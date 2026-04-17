@@ -26,6 +26,7 @@ public:
     int get_volume();
     int get_port_id();
     accord_t* getAccords();
+    accord_t* get_default_accord();
 
     void set_soundFont_path(QString&);
     void set_instr_id(int);
