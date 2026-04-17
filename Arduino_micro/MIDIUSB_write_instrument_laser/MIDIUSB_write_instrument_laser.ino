@@ -8,6 +8,17 @@
 
 #include "MIDIUSB.h"
 
+#define BUTTON_PIN_0 8
+#define BUTTON_PIN_1 9
+#define BUTTON_PIN_2 5
+#define BUTTON_PIN_3 6
+#define BUTTON_PIN_4 7
+#define BUTTON_PIN_5 4
+
+int buttons_pins[6] = {BUTTON_PIN_0, BUTTON_PIN_1, BUTTON_PIN_2, BUTTON_PIN_3, BUTTON_PIN_4, BUTTON_PIN_5};
+int old_states[6] = {0, 0, 0, 0, 0, 0};
+int notes[] = {60, 62, 64, 65, 67, 69};
+
 // First parameter is the event type (0x09 = note on, 0x08 = note off).
 // Second parameter is note-on/note-off, combined with the channel.
 // Channel can be anything between 0-15. Typically reported to the user as 1-16.
@@ -26,16 +37,30 @@ void noteOff(byte channel, byte pitch, byte velocity) {
 
 void setup() {
   Serial.begin(115200);
+  for(int i = 0; i<6; i++)
+    pinMode(buttons_pins[i], INPUT_PULLUP);
 }
 
-
 void loop() {
-  Serial.println("Sending note on");
-  noteOn(0, 48, 64);   // Channel 0, middle C, normal velocity
-  MidiUSB.flush();
-  delay(500);
-  Serial.println("Sending note off");
-  noteOff(0, 48, 64);  // Channel 0, middle C, normal velocity
-  MidiUSB.flush();
-  delay(1500);
+
+  // check buttons
+  for(int i = 0; i<6; i++)
+  {
+    
+    int state = digitalRead(buttons_pins[i]);
+    if(state != old_states[i])
+    {
+      old_states[i] = state;
+      if(state == 0)
+      {
+        noteOn(0, notes[i], 127);   // Channel 0, middle C, normal velocity
+      }
+      else
+      {
+        noteOff(0, notes[i], 127);  // Channel 0, middle C, normal velocity
+      }
+      MidiUSB.flush();
+      delay(10);
+    }
+  }
 }
