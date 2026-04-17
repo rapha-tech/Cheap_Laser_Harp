@@ -12,7 +12,7 @@
 
 struct accord_t{
         int n_notes;
-        int notes[10];
+        int notes[24];
     };
 
 class EngineLaser : public QObject {
@@ -31,13 +31,13 @@ public:
     void loadSoundFont(QString&);
 
     // Notes lasers
-    void setNoteIndex(int laserId, int noteIndex, bool estNoire);
+    void setNoteIndex(int laserId, int noteMidi);
     void jouerNote(int laserId);
     void stopperNote(int laserId);
 
     // Notes directes depuis le piano
-    void jouerNoteDirecte(int noteIndex, bool estNoire);
-    void stopperNoteDirecte(int noteIndex, bool estNoire);
+    void jouerNoteDirecte(int noteMidi);
+    void stopperNoteDirecte(int noteMidi);
 
     // Volume
     void setVolume(float niveau);
@@ -50,6 +50,7 @@ public:
     // Utilitaire
     int  midiNoteForLaser(int laserId);
     accord_t* getAccords();
+    void setAccords(accord_t* accordcpy);
 
     // Compatibilité ancienne interface
     void configurerNote(int laserId, const QString &chemin) { Q_UNUSED(laserId) Q_UNUSED(chemin) }

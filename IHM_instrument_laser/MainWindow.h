@@ -30,8 +30,8 @@ private slots:
     void jouerLaser(int id);
     void stopperLaser(int id);
     void eteindreBarre(int id);
-    void activerAssignation(int id);
-    void assignerNoteLaser(int noteIndex, bool estNoire);
+    void toggleAssignation(int id);
+    void toggleTouche(int noteMidi);
     void nouveau();
     void actif();
     void loadSF2();
@@ -45,7 +45,6 @@ private slots:
 
 private:
     void repositionnerTouchesNoires();
-    void surlignerToucheAssignee(int laserId);
     void resetStylePiano();
 
     QString configPath;
@@ -63,7 +62,9 @@ private:
 
     QMap<int, int> m_laserNote;
     QMap<int, bool> m_laserNoteEstNoire;
+    accord_t* m_accords;
     int m_laserEnAssignation;
+    int m_pselectedTouches[24];
 
     QListWidget* m_choixInstrument;
     QVector<QLabel*> m_labelsNotes;
@@ -73,9 +74,8 @@ private:
     EngineLaser* m_engine;
     configFile* m_configFile;
 
-    static const QStringList NOTES_BLANCHES;
-    static const QStringList NOTES_NOIRES;
-    static const QList<int> POSITIONS_NOIRES;
+    static const QStringList NOTES_NAMES;
+    static const QList<int> IS_NOIRE;
 };
 
 #endif

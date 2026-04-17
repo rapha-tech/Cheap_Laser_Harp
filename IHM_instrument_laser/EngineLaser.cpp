@@ -61,12 +61,14 @@ bool EngineLaser::initEngine(QString& soundFontPath)
     if (!m_tsf) {
         qWarning() << "EngineLaser: SoundFont introuvable !";
         ma_device_uninit(&m_device);
+        ma_mutex_uninit(&m_mutex);
         return 0;
     }
 
     if (ma_device_start(&m_device) != MA_SUCCESS) {
         qWarning() << "EngineLaser: impossible de démarrer la lecture";
         ma_device_uninit(&m_device);
+        ma_mutex_uninit(&m_mutex);
         return 0;
     }
 
@@ -116,26 +118,14 @@ QStringList EngineLaser::getInstrumentsDisponibles() const
 }
 
 // ─────────────────────────────────────────────
-int EngineLaser::noteIndexToMidi(int noteIndex, bool estNoire)
+void EngineLaser::setNoteIndex(int laserId, int noteMidi)
 {
-    if (noteIndex < 0 || noteIndex >= 12) return MIDI_BASE;
-    if (estNoire) {
-        int off = MIDI_NOIR[noteIndex];
-        return (off < 0) ? MIDI_BASE : MIDI_BASE + off;
-    }
-    return MIDI_BASE + MIDI_BLANC[noteIndex];
-}
-
-void EngineLaser::setNoteIndex(int laserId, int noteIndex, bool estNoire)
-{
-    // AJOUTE : stoppe l'ancienne note avant de changer
-    int ancienMidi = m_laserMidiNote.value(laserId, MIDI_BASE);
+    int ancienMidi = accords[laserId].notes[0];
     ma_mutex_lock(&m_mutex);
     tsf_note_off(m_tsf, m_instrument, ancienMidi);
     ma_mutex_unlock(&m_mutex);
 
-    m_laserMidiNote[laserId] = noteIndexToMidi(noteIndex, estNoire);
-    qDebug() << "Laser" << laserId << "-> MIDI" << m_laserMidiNote[laserId];
+    accords[laserId].notes[0] = noteMidi;
 }
 
 // ─────────────────────────────────────────────
@@ -161,21 +151,19 @@ void EngineLaser::stopperNote(int laserId)
     ma_mutex_unlock(&m_mutex);
 }
 
-void EngineLaser::jouerNoteDirecte(int noteIndex, bool estNoire)
+void EngineLaser::jouerNoteDirecte(int noteMidi)
 {
     if (!m_audioOk || !m_tsf) return;
-    int midi = noteIndexToMidi(noteIndex, estNoire);
     ma_mutex_lock(&m_mutex);
-    tsf_note_on(m_tsf, m_instrument, midi, m_volume);
+    tsf_note_on(m_tsf, m_instrument, noteMidi, m_volume);
     ma_mutex_unlock(&m_mutex);
 }
 
-void EngineLaser::stopperNoteDirecte(int noteIndex, bool estNoire)
+void EngineLaser::stopperNoteDirecte(int noteMidi)
 {
     if (!m_audioOk || !m_tsf) return;
-    int midi = noteIndexToMidi(noteIndex, estNoire);
     ma_mutex_lock(&m_mutex);
-    tsf_note_off(m_tsf, m_instrument, midi);
+    tsf_note_off(m_tsf, m_instrument, noteMidi);
     ma_mutex_unlock(&m_mutex);
 }
 
@@ -299,5 +287,28 @@ void EngineLaser::loadSoundFont(QString& fileName)
 
 accord_t* EngineLaser::getAccords()
 {
-    return accords;
+    accord_t* accordcpy = new accord_t[6];
+    for(int i = 0; i < 6; i++)
+    {
+        accordcpy[i].n_notes = accords[i].n_notes;
+        for(int j = 0; j < accords[i].n_notes; j++)
+        {
+            accordcpy[i].notes[j] = accords[i].notes[j];
+        }
+    }
+    return accordcpy;
+}
+
+void  EngineLaser::setAccords(accord_t* accordcpy)
+{
+    delete accords;
+    accords = new accord_t[6];
+    for(int i = 0; i < 6; i++)
+    {
+        accords[i].n_notes = accordcpy[i].n_notes;
+        for(int j = 0; j < accordcpy[i].n_notes; j++)
+        {
+            accords[i].notes[j] = accordcpy[i].notes[j];
+        }
+    }
 }
