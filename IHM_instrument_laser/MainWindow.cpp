@@ -98,16 +98,14 @@ MainWindow::MainWindow(QWidget *parent)
         for(int j = 0; j < i; j++)
         {
             if(IS_NOIRE[j % 12])
-            {
                 noteIdNoire++;
-            }
             else
-            {
                 noteIdBlanche++;
-            }
         }
-        NOTE_MIDI_TO_ID_TOUCHE_NOIRE[i] = noteIdNoire;
-        NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[i] = noteIdBlanche;
+        if(IS_NOIRE[i % 12])
+            NOTE_MIDI_TO_ID_TOUCHE_NOIRE[DEFAULT_OCTAVE + i] = noteIdNoire;
+        else
+            NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[DEFAULT_OCTAVE + i] = noteIdBlanche;
     }
 
     // load config file
@@ -561,11 +559,10 @@ void MainWindow::resetStylePiano() {
 
 void MainWindow::toggleTouche(int noteMidi) {
     int noteId = 0;
-    int modulo_note = noteMidi % 12;
 
-    if (IS_NOIRE[modulo_note])
+    if (IS_NOIRE[noteMidi % 12])
     {
-        noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[modulo_note];
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[noteMidi];
 
         if(m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] == 1)
         {
@@ -580,7 +577,7 @@ void MainWindow::toggleTouche(int noteMidi) {
     }
     else
     {
-        noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[modulo_note];
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[noteMidi];
 
         if(m_pselectedTouches[noteMidi - DEFAULT_OCTAVE] == 1)
         {
@@ -660,16 +657,14 @@ void MainWindow::allumerBarre(int id) {
         int noteMidi = m_accords[id].notes[i];
         int noteId = 0;
 
-        int modulo_note = noteMidi % 12;
-
-        if (IS_NOIRE[modulo_note])
+        if (IS_NOIRE[noteMidi % 12])
         {
-            noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[modulo_note];
+            noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[noteMidi];
             m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_PLAY);
         }
         else
         {
-            noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[modulo_note];
+            noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[noteMidi];
             m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_PLAY);
         }
     }

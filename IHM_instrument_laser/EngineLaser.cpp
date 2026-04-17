@@ -9,13 +9,6 @@
 
 EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
 {
-    m_accords = new accord_t[6];
-    for(int i = 0; i < 6; i++)
-    {
-        m_accords[i].n_notes = 1;
-        m_accords[i].notes[0] = 60 + i;
-    }
-
     m_audioOk = false;
 }
 
