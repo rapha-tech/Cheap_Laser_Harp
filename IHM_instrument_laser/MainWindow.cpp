@@ -291,6 +291,7 @@ MainWindow::MainWindow(QWidget *parent)
         connect(btn, &QPushButton::released, this, [=]() {
             stopperLaser(i);
             eteindreBarre(i);
+            btn->setIcon(QIcon());
         });
         m_btnLaser[i - 1] = btn;
 
