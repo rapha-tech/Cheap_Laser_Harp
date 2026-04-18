@@ -31,8 +31,8 @@ public:
 
 
     // Notes lasers
-    void jouerNote(int laserId);
-    void stopperNote(int laserId);
+    void jouerLaser(int laserId);
+    void stopperLaser(int laserId);
 
     // Notes directes depuis le piano
     void jouerNoteDirecte(int noteMidi);

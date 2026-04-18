@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QListWidget>
+#include <QKeyEvent>
 
 #include "EngineLaser.h"
 #include "configFile.h"
@@ -52,6 +53,9 @@ private slots:
 private:
     void repositionnerTouchesNoires();
     void resetStylePiano();
+
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 
     QString m_configPath;
 

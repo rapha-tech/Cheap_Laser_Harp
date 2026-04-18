@@ -117,15 +117,16 @@ MainWindow::MainWindow(QWidget *parent)
     QStringList recentConfigs = m_recentFiles->getListConfigs();
 
 
+    m_configPath = QString(DEFAULT_CONFIG_PATH);
     if(recentConfigs.isEmpty())
     {
         // load default config file
-        QString default_path = QString(DEFAULT_CONFIG_PATH);
-        m_configFile = new configFile(default_path);
+        m_configFile = new configFile(m_configPath);
     }
     else
     {
         // load latest config file
+        m_configPath = recentConfigs[0];
         m_configFile = new configFile(recentConfigs[0]);
     }
 
@@ -309,13 +310,11 @@ MainWindow::MainWindow(QWidget *parent)
             );
         connect(btn, &QPushButton::pressed,  this, [=]() {
             jouerLaser(i);
-            allumerBarre(i);
             btn->setIcon(QIcon(":/allume.png"));
 
         });
         connect(btn, &QPushButton::released, this, [=]() {
             stopperLaser(i);
-            eteindreBarre(i);
             btn->setIcon(QIcon());
         });
         m_btnLaser[i] = btn;
@@ -431,13 +430,16 @@ MainWindow::MainWindow(QWidget *parent)
                     m_accords = m_engine->getAccords();
                     for(int i = 0; i < m_accords->n_notes; i++)
                     {
-                        if (active) {allumerBarre(midiNote);
+                        if (active)
+                        {
+                            allumerBarre(midiNote);
                             m_btnLaser[midiNote]->setIcon(QIcon(":/allume.png"));
-}
-
-                        else {eteindreBarre(midiNote);
+                        }
+                        else
+                        {
+                            eteindreBarre(midiNote);
                             m_btnLaser[midiNote]->setIcon(QIcon());
-}
+                        }
 
                     }
                 }
@@ -512,14 +514,72 @@ void MainWindow::isEngineOk()
     }
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Q)
+    {
+        jouerLaser(0);
+    }
+    else if(event->key() == Qt::Key_S)
+    {
+        jouerLaser(1);
+    }
+    else if(event->key() == Qt::Key_D)
+    {
+        jouerLaser(2);
+    }
+    else if(event->key() == Qt::Key_F)
+    {
+        jouerLaser(3);
+    }
+    else if(event->key() == Qt::Key_G)
+    {
+        jouerLaser(4);
+    }
+    else if(event->key() == Qt::Key_H)
+    {
+        jouerLaser(5);
+    }
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Q)
+    {
+        stopperLaser(0);
+    }
+    else if(event->key() == Qt::Key_S)
+    {
+        stopperLaser(1);
+    }
+    else if(event->key() == Qt::Key_D)
+    {
+        stopperLaser(2);
+    }
+    else if(event->key() == Qt::Key_F)
+    {
+        stopperLaser(3);
+    }
+    else if(event->key() == Qt::Key_G)
+    {
+        stopperLaser(4);
+    }
+    else if(event->key() == Qt::Key_H)
+    {
+        stopperLaser(5);
+    }
+}
+
 // ─────────────────────────────────────────────
-void MainWindow::resizeEvent(QResizeEvent *event) {
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
     QMainWindow::resizeEvent(event);
     repositionnerTouchesNoires();
 }
 
 
-void MainWindow::repositionnerTouchesNoires() {
+void MainWindow::repositionnerTouchesNoires()
+{
     if (m_touchesBlanches.isEmpty() || m_touchesNoires.isEmpty()) return;
     if (!m_pianoWidget) return;
 
@@ -551,7 +611,8 @@ void MainWindow::repositionnerTouchesNoires() {
 }
 
 
-void MainWindow::resetStylePiano() {
+void MainWindow::resetStylePiano()
+{
     for (auto t : m_touchesBlanches) t->setStyleSheet(S_BLANCHE);
     for (auto t : m_touchesNoires)   t->setStyleSheet(S_NOIRE);
     for(int i = 0; i < NOTES_DISPLAYED; i++)
@@ -560,7 +621,8 @@ void MainWindow::resetStylePiano() {
     }
 }
 
-void MainWindow::toggleTouche(int noteMidi) {
+void MainWindow::toggleTouche(int noteMidi)
+{
     int noteId = 0;
 
     if (IS_NOIRE[noteMidi % 12])
@@ -599,6 +661,7 @@ void MainWindow::toggleAssignation(int laserId)
 {
     if(m_laserEnAssignation == -1)
     {
+
         m_laserEnAssignation = laserId;
         m_btnAssign[laserId]->setText("Valider");
         m_btnAssign[laserId]->setStyleSheet(
@@ -606,10 +669,6 @@ void MainWindow::toggleAssignation(int laserId)
             "  border: 1px solid #15fc00; color: #49ec00; font-size: 11px; }"
             );
         resetStylePiano();
-
-
-        if(m_accords != nullptr)
-            delete m_accords;
 
         m_accords = m_engine->getAccords();
         for(int i = 0; i < m_accords[laserId].n_notes; i++)
@@ -642,16 +701,21 @@ void MainWindow::toggleAssignation(int laserId)
     }
 }
 
-void MainWindow::jouerLaser(int id) {
-    m_engine->jouerNote(id);
+void MainWindow::jouerLaser(int id)
+{
+    m_engine->jouerLaser(id);
+    allumerBarre(id);
 }
 
-void MainWindow::stopperLaser(int id) {
-    m_engine->stopperNote(id);
+void MainWindow::stopperLaser(int id)
+{
+    m_engine->stopperLaser(id);
+    eteindreBarre(id);
 }
 
 // ─────────────────────────────────────────────
-void MainWindow::allumerBarre(int id) {
+void MainWindow::allumerBarre(int id)
+{
     m_accords = m_engine->getAccords();
 
     for(int i = 0; i < m_accords[id].n_notes; i++)
@@ -677,7 +741,8 @@ void MainWindow::allumerBarre(int id) {
         "background-color: #ff00ff; border-radius: 5px;");
 }
 
-void MainWindow::eteindreBarre(int id) {
+void MainWindow::eteindreBarre(int id)
+{
     m_barres[id]->setStyleSheet(
         "background-color: #222; border-radius: 5px;");
     resetStylePiano();

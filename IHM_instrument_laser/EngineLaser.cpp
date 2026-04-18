@@ -103,7 +103,7 @@ QStringList EngineLaser::getInstrumentsDisponibles() const
 }
 
 // ─────────────────────────────────────────────
-void EngineLaser::jouerNote(int laserId)
+void EngineLaser::jouerLaser(int laserId)
 {
     if (!m_audioOk || !m_tsf) return;
     ma_mutex_lock(&m_mutex);
@@ -114,7 +114,7 @@ void EngineLaser::jouerNote(int laserId)
     ma_mutex_unlock(&m_mutex);
 }
 
-void EngineLaser::stopperNote(int laserId)
+void EngineLaser::stopperLaser(int laserId)
 {
     if (!m_audioOk || !m_tsf) return;
     ma_mutex_lock(&m_mutex);
