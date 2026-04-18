@@ -36,7 +36,9 @@ RecentFiles::RecentFiles()
                 setListJson(key, m_ListConfigs);
             }
         }
-    } else {
+    }
+    else
+    {
         qDebug() <<"recent file : read error";
     }
 
@@ -81,7 +83,7 @@ void RecentFiles::write()
 
     bool suc = yyjson_mut_write_file(RECENT_FILES_PATH, doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
     if (suc)
-        qDebug() << "successfully saved recent files";
+        qDebug() << "recent file : successfully saved";
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);
@@ -136,6 +138,15 @@ void RecentFiles::addQStringList(QStringList& StrList, QString& QStr)
     }
     else
     {
-        // FIXME : handle the case of an already present file that has to go on top of the list
+        // handle the case of an already present file that has to go on top of the list
+        QStringList TempList = QStringList();
+
+        TempList.append(QStr);
+        for(int i = 0; i < StrList.count(); i++)
+        {
+            if(QStr != StrList[i])
+                TempList.append(StrList[i]);
+        }
+        StrList = TempList;
     }
 }
