@@ -1,4 +1,6 @@
 #include "configFile.h"
+#include <QDebug>
+
 
 //     {
 //        "soundfont_path": "C:\Users\Documents\sf2\Vintage.sf2",
@@ -79,8 +81,10 @@ configFile::configFile(QString& configFilePath)
                 setAccordJson(key, m_accords, 5);
             }
         }
-    } else {
-        printf("read error");
+    }
+    else
+    {
+        qDebug() << "config file : read error";
     }
 
     // Free the doc
@@ -152,7 +156,8 @@ void configFile::write(QString& conFigFilePath)
 
 
     bool suc = yyjson_mut_write_file(conFigFilePath.toLocal8Bit(), doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
-    if (suc) printf("OK");
+    if (suc)
+        qDebug() << "config file : successfully saved";
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);

@@ -37,7 +37,7 @@ RecentFiles::RecentFiles()
             }
         }
     } else {
-        printf("read error");
+        qDebug() <<"recent file : read error";
     }
 
     // Free the doc
@@ -80,7 +80,8 @@ void RecentFiles::write()
     yyjson_mut_doc_set_root(doc, root);
 
     bool suc = yyjson_mut_write_file(RECENT_FILES_PATH, doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
-    if (suc) printf("OK");
+    if (suc)
+        qDebug() << "successfully saved recent files";
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);
@@ -95,7 +96,7 @@ void RecentFiles::addQStrArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, QString
         strcpy(str, QstrList[i].toLocal8Bit());
         value = yyjson_mut_str(doc, str);
         yyjson_mut_arr_append(arr, value);
-        // FIXME : fix memory leak
+        // FIXME : fix memory leak caused by str
     }
 }
 
@@ -127,7 +128,7 @@ void RecentFiles::addQStringList(QStringList& StrList, QString& QStr)
         QStringList TempList = QStringList();
 
         TempList.append(QStr);
-        for(int i = 0; i < StrList.count() - 1; i++)
+        for(int i = 0; i < StrList.count(); i++)
         {
             TempList.append(StrList[i]);
         }
