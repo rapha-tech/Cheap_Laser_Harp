@@ -17,9 +17,12 @@
 #include <QMenu>
 #include <QAction>
 #include <QFileDialog>
+#include <QList>
 
 #define NOTES_DISPLAYED 24
 #define DEFAULT_OCTAVE 4 * 12
+
+#define DEFAULT_CONFIG_PATH "config.json"
 
 const QStringList MainWindow::NOTES_NAMES = {
     "Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"
@@ -108,9 +111,24 @@ MainWindow::MainWindow(QWidget *parent)
             NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[DEFAULT_OCTAVE + i] = noteIdBlanche;
     }
 
-    // load config file
-    m_configPath = QString("config.json");
-    m_configFile = new configFile(m_configPath);
+    // load RecentFiles file
+    m_recentFiles = new RecentFiles;
+    QStringList recentSoundFonts = m_recentFiles->getListSoundFonts();
+    QStringList recentConfigs = m_recentFiles->getListConfigs();
+
+
+    if(recentConfigs.isEmpty())
+    {
+        // load default config file
+        QString default_path = QString(DEFAULT_CONFIG_PATH);
+        m_configFile = new configFile(default_path);
+    }
+    else
+    {
+        // load latest config file
+        m_configFile = new configFile(recentConfigs[0]);
+    }
+
 
     // get settings
     QString soundFontPath = m_configFile->get_soundFont_path();
@@ -130,7 +148,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     QAction *actionCharger = new QAction("&Charger configuration", this);
     mFichier->addAction(actionCharger);
-    connect(actionCharger, SIGNAL(triggered()), this, SLOT(loadConfig()));
+    connect(actionCharger, SIGNAL(triggered()), this, SLOT(getConfigPathLoad()));
+
+    mListeLatestConfigs = new QMenu("&Configurations recentes");
+    mFichier->addMenu(mListeLatestConfigs);
+
+    connect(mFichier, &QMenu::aboutToShow, this, [=]() {
+        updateLatestConfigs();
+    });
 
     QAction *actionSave = new QAction("&Enregistrer", this);
     mFichier->addAction(actionSave);
@@ -154,17 +179,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     QAction *actionSF2 = new QAction("&Charger SoundFont", this);
     mInstrument->addAction(actionSF2);
-    connect(actionSF2, SIGNAL(triggered()), this, SLOT(loadSF2()));
+    connect(actionSF2, SIGNAL(triggered()), this, SLOT(getSoundFontPath()));
 
+    mListeLatestSoundFont = new QMenu("&SoundFont recentes");
+    mInstrument->addMenu(mListeLatestSoundFont);
+
+    connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
+        updateLatestSoundFonts();
+    });
 
     mListePeripheriques = new QMenu("&Peripheriques");
-
-    updatePorts();
-
     mInstrument->addMenu(mListePeripheriques);
+    menuBar()->addMenu(mInstrument);
 
     // this action is used to update the list of available Midi ports when the menu bar is triggered
-    menuBar()->addMenu(mInstrument);
     connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
         updatePorts();
     });
@@ -686,6 +714,10 @@ void MainWindow::fermer() {
         == QMessageBox::Yes)
     {
         m_configFile->write(m_configPath);
+
+        m_recentFiles->addListConfigs(m_configPath);
+        m_recentFiles->write();
+
         close();
     }
 }
@@ -701,15 +733,24 @@ void MainWindow::actif() {
     this->show();
 }
 
-void MainWindow::loadSF2()
+void MainWindow::getSoundFontPath()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open SoundFont"), "", tr("SoundFont (*.sf2)"));
+    loadSoundFont(fileName);
+}
 
+void MainWindow::loadSoundFont(QString& soundFontPath)
+{
     if(!m_engine->isAudioOk()) // there was probably an error on initialisation with the last SoundFont
-        m_engine->initEngine(fileName);
+        m_engine->initEngine(soundFontPath);
 
-    m_configFile->set_soundFont_path(fileName);
-    updateListInstruments(fileName);
+    m_configFile->set_soundFont_path(soundFontPath);
+
+    // update latest SoundFont
+    m_recentFiles->addListSoundFonts(soundFontPath);
+    m_recentFiles->write();
+
+    updateListInstruments(soundFontPath);
 }
 
 void MainWindow::updateListInstruments(QString& fileName)
@@ -732,6 +773,12 @@ void MainWindow::updateListInstruments(QString& fileName)
     m_engine->chargerInstrument(0);
     m_configFile->set_instr_id(0);
     m_choixInstrument->setCurrentRow(0);
+}
+
+void MainWindow::loadInstrument(int id)
+{
+    m_engine->chargerInstrument(id);
+    m_configFile->set_instr_id(id);
 }
 
 void MainWindow::connectMidi(int id)
@@ -766,18 +813,69 @@ void MainWindow::updatePorts()
     }
 }
 
-void MainWindow::loadInstrument(int id)
+void MainWindow::updateLatestConfigs()
 {
-    m_engine->chargerInstrument(id);
-    m_configFile->set_instr_id(id);
+    if(!mListeLatestConfigs->isEmpty())
+        mListeLatestConfigs->clear();
+
+    QStringList recentFiles = m_recentFiles->getListConfigs();
+    qDebug() << recentFiles;
+
+    if(recentFiles.size() > 0)
+    {
+        for(unsigned int i = 0; i < recentFiles.size(); i++)
+        {
+            // TODO : print only the filename (not the full path)
+            QAction* actionFile = new QAction(recentFiles[i], this);
+            mListeLatestConfigs->addAction(actionFile);
+            connect(actionFile, &QAction::triggered, this, [=]() {
+                QString configPath(recentFiles[i]);
+                loadConfig(configPath);
+            });
+        }
+    }
+    else
+    {
+        mListeLatestConfigs->addAction("&Aucune config recente");
+    }
 }
 
-void MainWindow::loadConfig()
+void MainWindow::updateLatestSoundFonts()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open configuration file"), "", tr("Configuration file (*.json)"));
+    if(!mListeLatestSoundFont->isEmpty())
+        mListeLatestSoundFont->clear();
+
+    QStringList recentFiles = m_recentFiles->getListSoundFonts();
+    if(recentFiles.size() > 0)
+    {
+        for(unsigned int i = 0; i < recentFiles.size(); i++)
+        {
+            // TODO : print only the filename (not the full path)
+            QAction* actionFile = new QAction(recentFiles[i], this);
+            mListeLatestSoundFont->addAction(actionFile);
+            connect(actionFile, &QAction::triggered, this, [=]() {
+                QString configPath(recentFiles[i]);
+                loadSoundFont(configPath);
+            });
+        }
+    }
+    else
+    {
+        mListeLatestSoundFont->addAction("&Aucune SoundFont recente");
+    }
+}
+
+void MainWindow::getConfigPathLoad()
+{
+    QString configPath = QFileDialog::getOpenFileName(this, tr("Open configuration file"), "", tr("Configuration file (*.json)"));
+    loadConfig(configPath);
+}
+
+void MainWindow::loadConfig(QString& configPath)
+{
     delete m_configFile;
-    m_configFile = new configFile(fileName);
-    m_configPath = fileName;
+    m_configFile = new configFile(configPath);
+    m_configPath = configPath;
 
     QString soundFontPath = m_configFile->get_soundFont_path();
     int instrumentId = m_configFile->get_instr_id();
@@ -793,11 +891,18 @@ void MainWindow::loadConfig()
     m_engine->setVolume(volume / 100.0f);
 
     m_engine->setAccords(accords);
+
+    // update latest config
+    m_recentFiles->addListConfigs(configPath);
+    m_recentFiles->write();
 }
 
 void MainWindow::saveConfig()
 {
     m_configFile->write(m_configPath);
+
+    m_recentFiles->addListConfigs(m_configPath);
+    m_recentFiles->write();
 }
 
 void MainWindow::saveConfigAs()
@@ -805,4 +910,7 @@ void MainWindow::saveConfigAs()
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save configuration file"), "config.json", tr("Configuration file (*.json)"));
     m_configFile->write(fileName);
     m_configPath = fileName;
+
+    m_recentFiles->addListConfigs(fileName);
+    m_recentFiles->write();
 }

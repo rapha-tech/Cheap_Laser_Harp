@@ -8,7 +8,8 @@ SOURCES += \
     MainWindow.cpp \
     EngineLaser.cpp \
     lib/RtMidi.cpp \
-    lib/yyjson.c
+    lib/yyjson.c \
+    RecentFiles.cpp
 
 HEADERS += \
     MainWindow.h \
@@ -17,7 +18,8 @@ HEADERS += \
     lib/RtMidi.h \
     lib/tsf.h \
     lib/miniaudio.h \
-    lib/yyjson.h
+    lib/yyjson.h \
+    RecentFiles.h
 
 RC_FILE = app.rc
 

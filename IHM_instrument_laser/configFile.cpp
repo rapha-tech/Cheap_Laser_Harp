@@ -13,7 +13,7 @@
 //        "notes_laser_5":[54, 58, 56]
 //     }
 
-configFile::configFile(QString& conFigFilePath)
+configFile::configFile(QString& configFilePath)
 {
     // Default values if no file is found
     SoundFont_path = QString();
@@ -23,8 +23,7 @@ configFile::configFile(QString& conFigFilePath)
 
     m_accords = get_default_accord();
 
-    // Read the JSON file
-    yyjson_doc *doc = yyjson_read_file(conFigFilePath.toLocal8Bit().constData(), 0, NULL, NULL);
+    yyjson_doc *doc = yyjson_read_file(configFilePath.toLocal8Bit().constData(), 0, NULL, NULL);
 
     // Iterate over the root object
     if (doc)

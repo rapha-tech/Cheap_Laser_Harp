@@ -15,6 +15,7 @@
 
 #include "EngineLaser.h"
 #include "configFile.h"
+#include "RecentFiles.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -35,12 +36,16 @@ private slots:
     void toggleTouche(int noteMidi);
     void nouveau();
     void actif();
-    void loadSF2();
+    void getSoundFontPath();
+    void loadSoundFont(QString& soundFontPath);
+    void updateLatestSoundFonts();
     void connectMidi(int id);
     void updatePorts();
     void updateListInstruments(QString&);
     void loadInstrument(int id);
-    void loadConfig();
+    void getConfigPathLoad();
+    void loadConfig(QString& configPath);
+    void updateLatestConfigs();
     void saveConfig();
     void saveConfigAs();
 
@@ -51,6 +56,8 @@ private:
     QString m_configPath;
 
     QMenu *mListePeripheriques;
+    QMenu *mListeLatestConfigs;
+    QMenu *mListeLatestSoundFont;
     QSlider *sliderVol;
 
     QVector<QFrame*> m_barres;
@@ -70,6 +77,7 @@ private:
 
     EngineLaser* m_engine;
     configFile* m_configFile;
+    RecentFiles* m_recentFiles;
 
     static const QStringList NOTES_NAMES;
     static const QList<int> IS_NOIRE;
