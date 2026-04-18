@@ -251,32 +251,7 @@ MainWindow::MainWindow(QWidget *parent)
     sliderVol = new QSlider(Qt::Horizontal);
     sliderVol->setRange(0, 100);
     left->addWidget(sliderVol);
-
-    left->addSpacing(8);
-    QLabel *titleNotes = new QLabel("Notes assignées");
-    titleNotes->setStyleSheet("font-weight: bold; color: #00BFFF;");
-    left->addWidget(titleNotes);
-
-    QWidget *noteListWidget = new QWidget();
-    QGridLayout *noteGrid = new QGridLayout(noteListWidget);
-    noteGrid->setContentsMargins(0, 2, 0, 0);
-    noteGrid->setVerticalSpacing(3);
-    noteGrid->setHorizontalSpacing(6);
-    m_labelsNotes.resize(6);
-
-    for (int i = 0; i < 6; i++) {
-        QLabel *laserLbl = new QLabel(QString("Laser %1 :").arg(i + 1));
-        laserLbl->setStyleSheet("font-size: 11px;");
-        QLabel *noteLbl  = new QLabel(NOTES_NAMES[i]);
-        noteLbl->setStyleSheet(
-            "font-size: 11px; font-weight: bold; color: #ff66cc;");
-        m_labelsNotes[i] = noteLbl;
-        noteGrid->addWidget(laserLbl, i, 0);
-        noteGrid->addWidget(noteLbl,  i, 1);
-    }
-    left->addWidget(noteListWidget);
     left->addStretch();
-
 
 
     QPushButton *rendreactif = new QPushButton("Rendre Actif");
