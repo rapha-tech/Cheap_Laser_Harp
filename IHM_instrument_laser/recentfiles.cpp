@@ -5,6 +5,8 @@
 //        "ListConfigs":["config.json", "piano.json", "musique1.json"],
 //     }
 
+#include <QDebug>
+
 #define RECENT_FILES_PATH "RecentFiles.json"
 
 RecentFiles::RecentFiles()
@@ -42,7 +44,7 @@ RecentFiles::RecentFiles()
     yyjson_doc_free(doc);
 }
 
-void RecentFiles::setListJson(yyjson_val* key, QStringList& List)
+void RecentFiles::setListJson(yyjson_val* key, QStringList& QstrList)
 {
     yyjson_val *val;
     yyjson_val *arr = yyjson_obj_iter_get_val(key);
@@ -51,7 +53,7 @@ void RecentFiles::setListJson(yyjson_val* key, QStringList& List)
     while ((val = yyjson_arr_iter_next(&iter)))
     {
         QString string = QString(yyjson_get_str(val));
-        List.append(string);
+        QstrList.append(string);
     }
 }
 
@@ -84,13 +86,16 @@ void RecentFiles::write()
     yyjson_mut_doc_free(doc);
 }
 
-void RecentFiles::addQStrArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, QStringList& Qstr)
+void RecentFiles::addQStrArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, QStringList& QstrList)
 {
     yyjson_mut_val *value;
-    for(int i = 0; i < Qstr.count(); i++)
+    for(int i = 0; i < QstrList.count(); i++)
     {
-        value = yyjson_mut_str(doc, Qstr[i].toLocal8Bit().constData());
+        char* str = new char[QstrList[i].length() + 1];
+        strcpy(str, QstrList[i].toLocal8Bit());
+        value = yyjson_mut_str(doc, str);
         yyjson_mut_arr_append(arr, value);
+        // FIXME : fix memory leak
     }
 }
 
@@ -116,17 +121,17 @@ void RecentFiles::addListSoundFonts(QString& QStr)
 
 void RecentFiles::addQStringList(QStringList& StrList, QString& QStr)
 {
-    // TODO : use a fixed size ringbuff
     if(!StrList.contains(QStr))
     {
         // the element is not in the list
-        StrList.append(QString());
+        QStringList TempList = QStringList();
+
+        TempList.append(QStr);
         for(int i = 0; i < StrList.count() - 1; i++)
         {
-            // we shift the values to the right
-            StrList[i+1] = StrList[i];
+            TempList.append(StrList[i]);
         }
-        StrList[0] = QStr;
+        StrList = TempList;
     }
     else
     {

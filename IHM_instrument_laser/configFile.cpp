@@ -23,7 +23,7 @@ configFile::configFile(QString& configFilePath)
 
     m_accords = get_default_accord();
 
-    yyjson_doc *doc = yyjson_read_file(configFilePath.toLocal8Bit().constData(), 0, NULL, NULL);
+    yyjson_doc *doc = yyjson_read_file(configFilePath.toLocal8Bit(), 0, NULL, NULL);
 
     // Iterate over the root object
     if (doc)
@@ -110,7 +110,7 @@ void configFile::write(QString& conFigFilePath)
     yyjson_mut_val *root = yyjson_mut_obj(doc);
 
     // SoundFont path
-    yyjson_mut_val *val_SoundFont_path = yyjson_mut_str(doc, SoundFont_path.toLocal8Bit().constData());
+    yyjson_mut_val *val_SoundFont_path = yyjson_mut_str(doc, SoundFont_path.toLocal8Bit());
     yyjson_mut_obj_add(root, yyjson_mut_str(doc, "soundfont_path"), val_SoundFont_path);
 
     // Instrument id
@@ -151,7 +151,7 @@ void configFile::write(QString& conFigFilePath)
     yyjson_mut_doc_set_root(doc, root);
 
 
-    bool suc = yyjson_mut_write_file(conFigFilePath.toLocal8Bit().constData(), doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
+    bool suc = yyjson_mut_write_file(conFigFilePath.toLocal8Bit(), doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
     if (suc) printf("OK");
 
     // Free the memory of doc and all values which is created from this doc.

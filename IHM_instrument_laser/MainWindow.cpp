@@ -819,7 +819,6 @@ void MainWindow::updateLatestConfigs()
         mListeLatestConfigs->clear();
 
     QStringList recentFiles = m_recentFiles->getListConfigs();
-    qDebug() << recentFiles;
 
     if(recentFiles.size() > 0)
     {
