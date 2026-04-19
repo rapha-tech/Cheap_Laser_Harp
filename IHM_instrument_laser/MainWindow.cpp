@@ -428,8 +428,7 @@ MainWindow::MainWindow(QWidget *parent)
             this, [=](int row) {loadInstrument(row);});
 
     connect(sliderVol, &QSlider::valueChanged, this, [=](int val) {
-        m_engine->setVolume(val / 100.0f); // TODO : use logarithmic scale
-        m_configFile->set_volume(val);
+        setVolume(val);
     });
 
     connect(m_engine, &EngineLaser::noteRecueMidi,
@@ -450,14 +449,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     // apply previously loaded settings
     if(m_engine->isAudioOk())
-    {
         // load soundFont related stuff only if init was sucessfull
-        m_choixInstrument->setCurrentRow(instrumentId);
-        m_engine->chargerInstrument(instrumentId);
-    }
+        loadInstrument(instrumentId);
 
-    sliderVol->setValue(volume);
-    m_engine->setVolume(volume / 100.0f);
+    setVolume(volume);
 
     m_engine->initMidi(port_id);
 
@@ -505,8 +500,7 @@ void MainWindow::isEngineOk()
             loadSoundFont(fileName);
 
             int instrumentId = m_configFile->get_instr_id();
-            m_choixInstrument->setCurrentRow(instrumentId);
-            m_engine->chargerInstrument(instrumentId);
+            loadInstrument(instrumentId);
         }
         else
         {
@@ -805,9 +799,7 @@ void MainWindow::loadSoundFont(QString& soundFontPath)
         }
 
         // load the fisrt instrument in the SoundFont
-        m_engine->chargerInstrument(0);
-        m_configFile->set_instr_id(0);
-        m_choixInstrument->setCurrentRow(0);
+        loadInstrument(0);
 
         m_soundFontPath = soundFontPath;
     }
@@ -815,8 +807,25 @@ void MainWindow::loadSoundFont(QString& soundFontPath)
 
 void MainWindow::loadInstrument(int id)
 {
-    m_engine->chargerInstrument(id);
-    m_configFile->set_instr_id(id);
+    if(id != m_instrumentId)
+    {
+        m_engine->chargerInstrument(id);
+        m_configFile->set_instr_id(id);
+        m_choixInstrument->setCurrentRow(id);
+        m_instrumentId = id;
+    }
+
+}
+
+void MainWindow::setVolume(int val)
+{
+    if(val != m_volume)
+    {
+        sliderVol->setValue(val);
+        m_engine->setVolume(val / 100.0f);
+        m_configFile->set_volume(val);
+        m_volume = val;
+    }
 }
 
 void MainWindow::connectMidi(int id)
@@ -914,22 +923,18 @@ void MainWindow::loadConfig(QString& configPath)
     m_configFile = new configFile(configPath);
     m_configPath = configPath;
 
-    m_soundFontPath = m_configFile->get_soundFont_path();
+    QString soundFontPath = m_configFile->get_soundFont_path();
     int instrumentId = m_configFile->get_instr_id();
     int volume = m_configFile->get_volume();
     // int port_id = m_configFile->get_port_id(); we don't change the midi port
+
     SAFE_DELETE(m_accords);
     m_accords = m_configFile->getAccords();
-
-    loadSoundFont(m_soundFontPath);
-    m_choixInstrument->setCurrentRow(instrumentId);
-    m_engine->chargerInstrument(instrumentId);
-
-
-    sliderVol->setValue(volume);
-    m_engine->setVolume(volume / 100.0f);
-
     m_engine->setAccords(m_accords);
+
+    loadSoundFont(soundFontPath);
+    loadInstrument(instrumentId);
+    setVolume(volume);
 
     // update latest config
     m_recentFiles->addListConfigs(configPath);

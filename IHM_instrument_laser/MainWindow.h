@@ -39,6 +39,7 @@ private slots:
     void actif();
     void getSoundFontPath();
     void loadSoundFont(QString& soundFontPath);
+    void setVolume(int val);
     void updateLatestSoundFonts();
     void connectMidi(int id);
     void updatePorts();
@@ -58,6 +59,8 @@ private:
 
     QString m_configPath;
     QString m_soundFontPath;
+    int m_instrumentId = -1;
+    int m_volume = -1;
 
     QMenu *mListePeripheriques;
     QMenu *mListeLatestConfigs;
