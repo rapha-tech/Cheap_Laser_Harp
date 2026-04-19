@@ -81,10 +81,12 @@ configFile::configFile(QString& configFilePath)
                 setAccordJson(key, m_accords, 5);
             }
         }
+
+        qDebug() << "configFile : loaded config";
     }
     else
     {
-        qDebug() << "config file : read error";
+        qDebug() << "configFile : read error";
     }
 
     // Free the doc
@@ -157,7 +159,7 @@ void configFile::write(QString& conFigFilePath)
 
     bool suc = yyjson_mut_write_file(conFigFilePath.toLocal8Bit(), doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
     if (suc)
-        qDebug() << "config file : successfully saved";
+        qDebug() << "configFile : successfully saved";
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);
@@ -195,6 +197,7 @@ int configFile::get_port_id()
 
 accord_t* configFile::getAccords()
 {
+    qDebug() << "configFile : getAccords";
     accord_t* accordcpy = new accord_t[6];
     for(int i = 0; i < 6; i++)
     {
@@ -209,6 +212,7 @@ accord_t* configFile::getAccords()
 
 accord_t* configFile::get_default_accord()
 {
+    qDebug() << "configFile : get_default_accord";
     int default_notes[] = {60, 62, 64, 65, 67, 69};
     accord_t* accords = new accord_t[6];
 
@@ -243,6 +247,7 @@ void configFile::set_port_id(int id)
 
 void configFile::set_accords(accord_t* accordcpy)
 {
+    qDebug() << "configFile : set_accords";
     delete m_accords;
     m_accords = new accord_t[6];
     for(int i = 0; i < 6; i++)

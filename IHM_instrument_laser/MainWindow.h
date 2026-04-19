@@ -26,6 +26,8 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 
 private slots:
     void fermer();
@@ -38,12 +40,12 @@ private slots:
     void nouveau();
     void actif();
     void getSoundFontPath();
-    void loadSoundFont(QString& soundFontPath);
-    void setVolume(int val);
+    void loadSoundFont(QString& soundFontPath, int instrumentId = 0);
+    void setVolume(int val, bool slider = true);
     void updateLatestSoundFonts();
     void connectMidi(int id);
     void updatePorts();
-    void loadInstrument(int id);
+    void loadInstrument(int id, bool setRow = true);
     void getConfigPathLoad();
     void loadConfig(QString& configPath);
     void updateLatestConfigs();
@@ -53,9 +55,6 @@ private slots:
 private:
     void repositionnerTouchesNoires();
     void resetStylePiano();
-
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
 
     QString m_configPath;
     QString m_soundFontPath;
@@ -75,7 +74,7 @@ private:
     QVector<QPushButton*> m_touchesBlanches;
     QVector<QPushButton*> m_touchesNoires;
 
-    accord_t* m_accords;
+    accord_t* m_accords = nullptr;
     int m_laserEnAssignation;
     int m_pselectedTouches[24];
 
@@ -83,7 +82,7 @@ private:
     QVector<QLabel*> m_labelsNotes;
 
     EngineLaser* m_engine;
-    configFile* m_configFile;
+    configFile* m_configFile = nullptr;
     RecentFiles* m_recentFiles;
 
     static const QStringList NOTES_NAMES;

@@ -39,7 +39,7 @@ RecentFiles::RecentFiles()
     }
     else
     {
-        qDebug() <<"recent file : read error";
+        qDebug() <<"RecentFile : read error";
     }
 
     // Free the doc
@@ -87,7 +87,7 @@ void RecentFiles::write()
 
     bool suc = yyjson_mut_write_file(RECENT_FILES_PATH, doc, YYJSON_WRITE_PRETTY_TWO_SPACES, NULL, NULL);
     if (suc)
-        qDebug() << "recent file : successfully saved";
+        qDebug() << "RecentFile : successfully saved";
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);
@@ -146,6 +146,7 @@ void RecentFiles::addQStringList(QStringList& StrList, QString& QStr)
             TempList.append(StrList[i]);
         }
         StrList = TempList;
+        qDebug() << "RecentFile : add Qstr :" << QStr;
     }
     else
     {
@@ -159,5 +160,6 @@ void RecentFiles::addQStringList(QStringList& StrList, QString& QStr)
                 TempList.append(StrList[i]);
         }
         StrList = TempList;
+        qDebug() << "RecentFile : place Qstr on top :" << QStr;
     }
 }

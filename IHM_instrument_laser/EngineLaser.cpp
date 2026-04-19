@@ -47,9 +47,9 @@ bool EngineLaser::initEngine(QString& soundFontPath)
         return 0;
     }
 
-    printf("Playback Devices\n");
+    qDebug() << "Playback Devices : ";
     for (ma_uint32  iDevice = 0; iDevice < playbackDeviceCount; ++iDevice) {
-        qDebug() <<  iDevice << " : " << pPlaybackDeviceInfos[iDevice].name;
+        qDebug() << "   " << iDevice << " : " << pPlaybackDeviceInfos[iDevice].name;
     }
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -117,14 +117,19 @@ void EngineLaser::chargerInstrument(int idInstrument)
 {
     if (!m_tsf) return;
 
-    if (idInstrument < tsf_get_presetcount(m_tsf)) {
-        tsf_note_off_all(m_tsf);
-        // mute all sound before changing instrument
+    // mute all sound before changing instrument
+    tsf_note_off_all(m_tsf);
+
+    if (idInstrument < tsf_get_presetcount(m_tsf))
+    {
         m_instrument = idInstrument;
-        return;
+        qDebug() << "EngineLaser : Instrument changé, nouvel instrument : " << idInstrument;
     }
-    m_instrument = 0;
-    qDebug() << "Instrument non trouvé, fallback 0";
+    else
+    {
+        m_instrument = 0;
+        qDebug() << "EngineLaser : Instrument non trouvé, fallback 0";
+    }
 }
 
 QStringList EngineLaser::getInstrumentsDisponibles() const
@@ -179,10 +184,12 @@ void EngineLaser::stopperNoteDirecte(int noteMidi)
 void EngineLaser::setVolume(float niveau)
 {
     m_volume = niveau;
-    if (m_tsf) {
+    if (m_tsf)
+    {
         ma_mutex_lock(&m_mutex);
         tsf_set_volume(m_tsf, niveau);
         ma_mutex_unlock(&m_mutex);
+        qDebug() << "EngineLaser : volume set to : " << niveau;
     }
 }
 
@@ -193,7 +200,7 @@ bool EngineLaser::initMidi(unsigned int id)
         m_midiIn = new RtMidiIn();
         unsigned int nPorts = m_midiIn->getPortCount();
         if (nPorts == 0) {
-            qWarning() << "Aucun port MIDI disponible";
+            qWarning() << "EngineLaser : Aucun port MIDI disponible";
             delete m_midiIn;
             m_midiIn = nullptr;
             return false;
@@ -204,12 +211,12 @@ bool EngineLaser::initMidi(unsigned int id)
         m_midiIn->openPort(id);
         m_midiIn->setCallback(&EngineLaser::midiCallback, this);
         m_midiIn->ignoreTypes(false, false, false);
-        qDebug() << "MIDI ouvert:"
+        qDebug() << "EngineLaser : MIDI ouvert:"
                  << QString::fromStdString(m_midiIn->getPortName(id));
         return true;
 
     } catch (RtMidiError &e) {
-        qWarning() << "Erreur MIDI:"
+        qWarning() << "EngineLaser : Erreur MIDI:"
                    << QString::fromStdString(e.getMessage());
         return false;
     }
@@ -222,9 +229,11 @@ QStringList EngineLaser::getMidiPorts()
 
     unsigned int nPorts = midiIn->getPortCount();
 
-    if (nPorts == 0) {
+    if (nPorts == 0)
+    {
         delete midiIn;
         midiIn = nullptr;
+        qDebug() << "EngineLaser : no Midi device";
         return liste;
     }
 
@@ -234,6 +243,7 @@ QStringList EngineLaser::getMidiPorts()
     delete midiIn;
     midiIn = nullptr;
 
+    qDebug() << "EngineLaser : returned Midi devices : " << liste;
     return liste;
 }
 
@@ -244,6 +254,7 @@ void EngineLaser::stopMidi()
         m_midiIn->closePort();
         delete m_midiIn;
         m_midiIn = nullptr;
+        qDebug() << "EngineLaser : stopped Midi";
     }
 }
 
@@ -285,11 +296,13 @@ void EngineLaser::loadSoundFont(QString& fileName)
 {
     tsf_close(m_tsf); // Free the memory used by the current SoundFont
     m_tsf = tsf_load_filename(fileName.toLocal8Bit().constData());
-    if (!m_tsf) {
+    if (!m_tsf)
+    {
         qWarning() << "EngineLaser: SoundFont introuvable !";
         return;
     }
 
+    qDebug() << "EngineLaser : loaded SoundFont : " << fileName;
     tsf_set_output(m_tsf, TSF_STEREO_INTERLEAVED, 44100, 0);
 }
 
@@ -304,6 +317,7 @@ accord_t* EngineLaser::getAccords()
             accordcpy[i].notes[j] = m_accords[i].notes[j];
         }
     }
+    qDebug() << "EngineLaser : get accords";
     return accordcpy;
 }
 
@@ -319,4 +333,5 @@ void  EngineLaser::setAccords(accord_t* accordcpy)
             m_accords[i].notes[j] = accordcpy[i].notes[j];
         }
     }
+    qDebug() << "EngineLaser : accords set";
 }
