@@ -18,20 +18,10 @@
 #include <QAction>
 #include <QFileDialog>
 #include <QList>
+#include <QScrollArea>
+#include <QScrollBar>
 
 // command to make executable D:\Qt\6.11.0\mingw_64\bin\windeployqt D:\Cheap_Laser_Harp\IHM_instrument_laser\build\Desktop_Qt_6_11_0_MinGW_64_bit-Release\release
-
-#define NOTES_DISPLAYED 24
-#define DEFAULT_OCTAVE 4 * 12
-
-#define DEFAULT_CONFIG_PATH "config.json"
-
-#define SAFE_DELETE(pointer) \
-if(pointer != nullptr)       \
-{                            \
-    delete pointer;          \
-    pointer = nullptr;       \
-}                            \
 
 const QStringList MainWindow::NOTES_NAMES = {
     "Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"
@@ -113,7 +103,7 @@ MainWindow::MainWindow(QWidget *parent)
     // we precompute the mapping on startup to save time during real time operation
     int noteIdNoire;
     int noteIdBlanche;
-    for(int i = 0; i < NOTES_DISPLAYED; i++)
+    for(int i = 0; i < NOTES_TOTAL; i++)
     {
         noteIdNoire = 0;
         noteIdBlanche = 0;
@@ -339,6 +329,7 @@ MainWindow::MainWindow(QWidget *parent)
     pianoVBox->setContentsMargins(0, 0, 0, 0);
     pianoVBox->setSpacing(4);
 
+
     QLabel *pianoHint = new QLabel(
         "Activer un bouton d'assignation puis cliquer une touche - Les touches sont cliquables"
         );
@@ -348,17 +339,44 @@ MainWindow::MainWindow(QWidget *parent)
     m_pianoWidget->setMinimumHeight(120);
     m_pianoWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    QHBoxLayout *pianoLay = new QHBoxLayout(m_pianoWidget);
-    pianoLay->setSpacing(1);
+    QVBoxLayout *pianoWidgetLay = new QVBoxLayout(m_pianoWidget);
+    pianoWidgetLay->setContentsMargins(0, 0, 0, 0);
+    pianoWidgetLay->setSpacing(0);
+
+    const int WHITE_KEY_WIDTH = 28;
+    const int WHITE_KEY_SPACING = 1;
+    const int BLACK_KEY_WIDTH = 18;
+    const int BLACK_KEY_HEIGHT = 75;
+    const int PIANO_HEIGHT = 120;
+
+    // Count white keys to compute total width
+    int whiteKeyCount = 0;
+    for (int i = 0; i < NOTES_TOTAL; i++)
+        if (!IS_NOIRE[i % 12]) whiteKeyCount++;
+
+    const int TOTAL_WIDTH = whiteKeyCount * (WHITE_KEY_WIDTH + WHITE_KEY_SPACING);
+
+    QScrollArea *pianoScroll = new QScrollArea();
+    pianoScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    pianoScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    pianoScroll->setWidgetResizable(false);
+    pianoScroll->setFrameShape(QFrame::NoFrame);
+    pianoScroll->setFixedHeight(PIANO_HEIGHT + 18);
+
+    QWidget *pianoCanvas = new QWidget();
+    pianoCanvas->setFixedSize(TOTAL_WIDTH, PIANO_HEIGHT);
+
+    QHBoxLayout *pianoLay = new QHBoxLayout(pianoCanvas);
+    pianoLay->setSpacing(WHITE_KEY_SPACING);
     pianoLay->setContentsMargins(0, 0, 0, 0);
 
-    for (int i = 0; i < NOTES_DISPLAYED; i++)
+    for (int i = 0; i < NOTES_TOTAL; i++)
     {
-        if(!IS_NOIRE[i % 12]) // only draw white ones
+        if (!IS_NOIRE[i % 12])
         {
             QPushButton *blanc = new QPushButton(NOTES_NAMES[i % 12]);
-            blanc->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            blanc->setMinimumWidth(10);
+            blanc->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+            blanc->setFixedWidth(WHITE_KEY_WIDTH);
             blanc->setStyleSheet(S_BLANCHE);
             connect(blanc, &QPushButton::pressed, this, [=]() {
                 m_engine->jouerNoteDirecte(DEFAULT_OCTAVE + i);
@@ -373,20 +391,22 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
 
-    // Overlay touches noires
-    QWidget *blackOverlay = new QWidget(m_pianoWidget);
-    blackOverlay->setAttribute(Qt::WA_TransparentForMouseEvents, false);
-    blackOverlay->setGeometry(0, 0, m_pianoWidget->width(), 75);
-    blackOverlay->raise();
-
-    for (int i = 0; i < NOTES_DISPLAYED; i++)
+    int whiteIndex = 0;
+    for (int i = 0; i < NOTES_TOTAL; i++)
     {
-        if(IS_NOIRE[i % 12]) // only draw black ones
+        if (!IS_NOIRE[i % 12])
         {
-            QPushButton *noir = new QPushButton();
-            noir->setFixedSize(18, 75);
+            whiteIndex++;
+        }
+        else
+        {
+            int x = whiteIndex * (WHITE_KEY_WIDTH + WHITE_KEY_SPACING)
+            - (BLACK_KEY_WIDTH / 2) - WHITE_KEY_SPACING;
+
+            QPushButton *noir = new QPushButton(pianoCanvas);
+            noir->setFixedSize(BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT);
+            noir->move(x, 0);
             noir->setStyleSheet(S_NOIRE);
-            noir->setParent(blackOverlay);
             noir->raise();
             m_touchesNoires.append(noir);
 
@@ -401,14 +421,17 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
 
+    pianoScroll->setWidget(pianoCanvas);
+    pianoWidgetLay->addWidget(pianoScroll);
+
     pianoVBox->addWidget(pianoHint);
     pianoVBox->addWidget(m_pianoWidget);
 
     centerLayout->addWidget(laserZone);
     centerLayout->addWidget(pianoZone);
 
-    root->addWidget(leftPanel, 20);
-    root->addWidget(center, 80);
+    root->addWidget(leftPanel, 25);
+    root->addWidget(center, 75);
 
     // ── Connexions ──
     connect(m_choixInstrument, &QListWidget ::currentRowChanged,
@@ -456,6 +479,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     QTimer::singleShot(0, this, [this]() {
         repositionnerTouchesNoires();
+    });
+
+    QTimer::singleShot(0, [=]() {
+        QScrollBar *hbar = pianoScroll->horizontalScrollBar();
+        hbar->setValue((hbar->minimum() + hbar->maximum()) / 2);
     });
 
     connect(mAide->addAction("&A propos"), &QAction::triggered, this, [=]() {
@@ -573,7 +601,7 @@ void MainWindow::repositionnerTouchesNoires()
 
     int noirIdx = 0;
     int blancIdx = 0;
-    for (int idx = 0; idx < NOTES_DISPLAYED; idx++)
+    for (int idx = 0; idx < NOTES_TOTAL; idx++)
     {
         if(IS_NOIRE[idx % 12])
         {
@@ -671,7 +699,7 @@ void MainWindow::toggleAssignation(int laserId)
             );
 
         m_accords[laserId].n_notes = 0;
-        for(int i = 0; i < NOTES_DISPLAYED; i++)
+        for(int i = 0; i < NOTES_TOTAL; i++)
         {
             if(m_pselectedTouches[i] == 1)
             {

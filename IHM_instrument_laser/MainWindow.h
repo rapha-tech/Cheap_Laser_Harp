@@ -18,6 +18,21 @@
 #include "configFile.h"
 #include "RecentFiles.h"
 
+#define NOTES_OCTAVE 12
+#define NOTES_DISPLAYED 24
+#define DEFAULT_OCTAVE 2 * NOTES_OCTAVE
+#define NOTES_TOTAL 7 * NOTES_OCTAVE
+
+#define DEFAULT_CONFIG_PATH "config.json"
+
+#define SAFE_DELETE(pointer) \
+if(pointer != nullptr)       \
+{                            \
+    delete pointer;          \
+    pointer = nullptr;       \
+}                            \
+
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
@@ -78,7 +93,7 @@ private:
 
     accord_t* m_accords = nullptr;
     int m_laserEnAssignation;
-    int m_pselectedTouches[24];
+    int m_pselectedTouches[NOTES_TOTAL];
 
     QListWidget* m_choixInstrument;
     QVector<QLabel*> m_labelsNotes;
