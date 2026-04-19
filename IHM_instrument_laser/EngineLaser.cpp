@@ -25,16 +25,48 @@ EngineLaser::~EngineLaser()
 
 bool EngineLaser::initEngine(QString& soundFontPath)
 {
-    // ── Init audio ──
-    ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
-    cfg.playback.format = ma_format_f32;
-    cfg.playback.channels = 2;
-    cfg.sampleRate = 44100;
-    cfg.dataCallback = EngineLaser::audioCallback;
-    cfg.pUserData = this;
+    if (m_audioOk) {
+        ma_device_uninit(&m_device);
+        ma_mutex_uninit(&m_mutex);
+    }
+    if (m_tsf)
+        tsf_close(m_tsf);
 
-    if (ma_device_init(nullptr, &cfg, &m_device) != MA_SUCCESS) {
+    ma_result result = ma_context_init(NULL, 0, NULL, &m_context);
+    if (result != MA_SUCCESS)
+    {
+        return 0;
+    }
+
+    ma_device_info* pPlaybackDeviceInfos;
+    ma_uint32 playbackDeviceCount;
+    result = ma_context_get_devices(&m_context, &pPlaybackDeviceInfos, &playbackDeviceCount, NULL, NULL);
+    if (result != MA_SUCCESS)
+    {
+        ma_context_uninit(&m_context);
+        return 0;
+    }
+
+    printf("Playback Devices\n");
+    for (ma_uint32  iDevice = 0; iDevice < playbackDeviceCount; ++iDevice) {
+        qDebug() <<  iDevice << " : " << pPlaybackDeviceInfos[iDevice].name;
+    }
+
+    ma_device_config config = ma_device_config_init(ma_device_type_playback);
+    config.playback.pDeviceID       = &pPlaybackDeviceInfos[0].id;
+    config.playback.format          = ma_format_f32;
+    config.playback.channels        = 2;
+    config.sampleRate               = 44100;
+    config.dataCallback             = EngineLaser::audioCallback;
+    config.pUserData                = this;
+    // TODO : find the optimal values
+    config.periodSizeInMilliseconds = 10;
+    config.periods                  = 3;
+
+    if (ma_device_init(&m_context, &config, &m_device) != MA_SUCCESS)
+    {
         qWarning() << "EngineLaser: impossible d'initialiser l'audio";
+        ma_context_uninit(&m_context);
         return 0;
     }
 
@@ -47,6 +79,7 @@ bool EngineLaser::initEngine(QString& soundFontPath)
         qWarning() << "EngineLaser: SoundFont introuvable !";
         ma_device_uninit(&m_device);
         ma_mutex_uninit(&m_mutex);
+        ma_context_uninit(&m_context);
         return 0;
     }
 
@@ -54,11 +87,13 @@ bool EngineLaser::initEngine(QString& soundFontPath)
         qWarning() << "EngineLaser: impossible de démarrer la lecture";
         ma_device_uninit(&m_device);
         ma_mutex_uninit(&m_mutex);
+        tsf_close(m_tsf);
+        ma_context_uninit(&m_context);
         return 0;
     }
 
     m_audioOk = true;
-    qDebug() << "EngineLaser: audio OK ";
+    qDebug() << "EngineLaser: audio OK";
     return 1;
 }
 
@@ -249,7 +284,6 @@ void EngineLaser::midiCallback(double /*dt*/,
 void EngineLaser::loadSoundFont(QString& fileName)
 {
     tsf_close(m_tsf); // Free the memory used by the current SoundFont
-
     m_tsf = tsf_load_filename(fileName.toLocal8Bit().constData());
     if (!m_tsf) {
         qWarning() << "EngineLaser: SoundFont introuvable !";

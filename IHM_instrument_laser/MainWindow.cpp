@@ -19,10 +19,19 @@
 #include <QFileDialog>
 #include <QList>
 
+// command to make executable D:\Qt\6.11.0\mingw_64\bin\windeployqt D:\Cheap_Laser_Harp\IHM_instrument_laser\build\Desktop_Qt_6_11_0_MinGW_64_bit-Release\release
+
 #define NOTES_DISPLAYED 24
 #define DEFAULT_OCTAVE 4 * 12
 
 #define DEFAULT_CONFIG_PATH "config.json"
+
+#define SAFE_DELETE(pointer) \
+if(pointer != nullptr)       \
+{                            \
+    delete pointer;          \
+    pointer = nullptr;       \
+}                            \
 
 const QStringList MainWindow::NOTES_NAMES = {
     "Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"
@@ -136,10 +145,9 @@ MainWindow::MainWindow(QWidget *parent)
     int instrumentId = m_configFile->get_instr_id();
     int volume = m_configFile->get_volume();
     int port_id = m_configFile->get_port_id();
-    accord_t* accords = m_configFile->getAccords();
+    m_accords = m_configFile->getAccords();
 
     m_engine = new EngineLaser(this);
-    m_engine->initEngine(soundFontPath);
 
     QMenu *mFichier = menuBar()->addMenu("&Fichier");
     QAction *actionnv = new QAction("&Nouveau projet ", this);
@@ -207,9 +215,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(reinitialiser,
             &QAction::triggered, this, [=]() {
                 for (int i = 0; i < 6; i++) {
+                    SAFE_DELETE(m_accords);
                     m_accords = m_configFile->get_default_accord();
                     m_engine->setAccords(m_accords);
-                    delete m_accords;
                 }
             });
     mLasers->addAction("&Parametres...");
@@ -427,6 +435,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_engine, &EngineLaser::noteRecueMidi,
             this, [=](int midiNote, bool active) {
                 for (int i = 0; i < 6; i++) {
+                    // FIXME : what is this ?
+                    SAFE_DELETE(m_accords);
                     m_accords = m_engine->getAccords();
                     for(int i = 0; i < m_accords->n_notes; i++)
                     {
@@ -440,12 +450,11 @@ MainWindow::MainWindow(QWidget *parent)
                             eteindreBarre(midiNote);
                             m_btnLaser[midiNote]->setIcon(QIcon());
                         }
-
                     }
                 }
             });
 
-    updateListInstruments(soundFontPath);
+    loadSoundFont(soundFontPath);
 
     // apply previously loaded settings
     if(m_engine->isAudioOk())
@@ -464,7 +473,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("Instrument Laser");
     setMinimumSize(700, 480);
 
-    m_engine->setAccords(accords);
+    m_engine->setAccords(m_accords);
 
     QTimer::singleShot(0, this, [this]() {
         repositionnerTouchesNoires();
@@ -501,7 +510,7 @@ void MainWindow::isEngineOk()
             m_engine->initEngine(fileName);
 
             m_configFile->set_soundFont_path(fileName);
-            updateListInstruments(fileName);
+            loadSoundFont(fileName);
 
             int instrumentId = m_configFile->get_instr_id();
             m_choixInstrument->setCurrentRow(instrumentId);
@@ -670,6 +679,7 @@ void MainWindow::toggleAssignation(int laserId)
             );
         resetStylePiano();
 
+        SAFE_DELETE(m_accords);
         m_accords = m_engine->getAccords();
         for(int i = 0; i < m_accords[laserId].n_notes; i++)
         {
@@ -716,8 +726,6 @@ void MainWindow::stopperLaser(int id)
 // ─────────────────────────────────────────────
 void MainWindow::allumerBarre(int id)
 {
-    m_accords = m_engine->getAccords();
-
     for(int i = 0; i < m_accords[id].n_notes; i++)
     {
 
@@ -781,38 +789,36 @@ void MainWindow::getSoundFontPath()
 
 void MainWindow::loadSoundFont(QString& soundFontPath)
 {
-    if(!m_engine->isAudioOk()) // there was probably an error on initialisation with the last SoundFont
+    if(soundFontPath != m_soundFontPath)
+    {
+        m_configFile->set_soundFont_path(soundFontPath);
+
+        // update latest SoundFont
+        m_recentFiles->addListSoundFonts(soundFontPath);
+        m_recentFiles->write();
+
+        // completely restart the engine (probably not necessary but safer)
         m_engine->initEngine(soundFontPath);
 
-    m_configFile->set_soundFont_path(soundFontPath);
+        m_choixInstrument->clear();
 
-    // update latest SoundFont
-    m_recentFiles->addListSoundFonts(soundFontPath);
-    m_recentFiles->write();
+        // Remplir QlistWidget avec instruments SF2
+        QStringList instruments = m_engine->getInstrumentsDisponibles();
+        if (!instruments.isEmpty()) {
+            m_choixInstrument->blockSignals(true);
+            m_choixInstrument->addItems(instruments);
+            m_choixInstrument->blockSignals(false);
+        } else {
+            m_choixInstrument->addItems({"Pas de SoundFont chargee"});
+        }
 
-    updateListInstruments(soundFontPath);
-}
+        // load the fisrt instrument in the SoundFont
+        m_engine->chargerInstrument(0);
+        m_configFile->set_instr_id(0);
+        m_choixInstrument->setCurrentRow(0);
 
-void MainWindow::updateListInstruments(QString& fileName)
-{
-    m_engine->loadSoundFont(fileName);
-
-    m_choixInstrument->clear();
-
-    // Remplir QlistWidget avec instruments SF2
-    QStringList instruments = m_engine->getInstrumentsDisponibles();
-    if (!instruments.isEmpty()) {
-        m_choixInstrument->blockSignals(true);
-        m_choixInstrument->addItems(instruments);
-        m_choixInstrument->blockSignals(false);
-    } else {
-        m_choixInstrument->addItems({"Pas de SoundFont chargee"});
+        m_soundFontPath = soundFontPath;
     }
-
-    // load the fisrt instrument in the SoundFont
-    m_engine->chargerInstrument(0);
-    m_configFile->set_instr_id(0);
-    m_choixInstrument->setCurrentRow(0);
 }
 
 void MainWindow::loadInstrument(int id)
@@ -884,17 +890,17 @@ void MainWindow::updateLatestSoundFonts()
     if(!mListeLatestSoundFont->isEmpty())
         mListeLatestSoundFont->clear();
 
-    QStringList recentFiles = m_recentFiles->getListSoundFonts();
-    if(recentFiles.size() > 0)
+    QStringList recentSoundFonts = m_recentFiles->getListSoundFonts();
+    if(recentSoundFonts.size() > 0)
     {
-        for(unsigned int i = 0; i < recentFiles.size(); i++)
+        for(unsigned int i = 0; i < recentSoundFonts.size(); i++)
         {
             // TODO : print only the filename (not the full path)
-            QAction* actionFile = new QAction(recentFiles[i], this);
+            QAction* actionFile = new QAction(recentSoundFonts[i], this);
             mListeLatestSoundFont->addAction(actionFile);
             connect(actionFile, &QAction::triggered, this, [=]() {
-                QString configPath(recentFiles[i]);
-                loadSoundFont(configPath);
+                QString soundFontPath(recentSoundFonts[i]);
+                loadSoundFont(soundFontPath);
             });
         }
     }
@@ -912,24 +918,26 @@ void MainWindow::getConfigPathLoad()
 
 void MainWindow::loadConfig(QString& configPath)
 {
-    delete m_configFile;
+    SAFE_DELETE(m_configFile);
     m_configFile = new configFile(configPath);
     m_configPath = configPath;
 
-    QString soundFontPath = m_configFile->get_soundFont_path();
+    m_soundFontPath = m_configFile->get_soundFont_path();
     int instrumentId = m_configFile->get_instr_id();
     int volume = m_configFile->get_volume();
     // int port_id = m_configFile->get_port_id(); we don't change the midi port
-    accord_t* accords = m_configFile->getAccords();
+    SAFE_DELETE(m_accords);
+    m_accords = m_configFile->getAccords();
 
-    updateListInstruments(soundFontPath);
+    loadSoundFont(m_soundFontPath);
     m_choixInstrument->setCurrentRow(instrumentId);
     m_engine->chargerInstrument(instrumentId);
+
 
     sliderVol->setValue(volume);
     m_engine->setVolume(volume / 100.0f);
 
-    m_engine->setAccords(accords);
+    m_engine->setAccords(m_accords);
 
     // update latest config
     m_recentFiles->addListConfigs(configPath);

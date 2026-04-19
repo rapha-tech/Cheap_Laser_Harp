@@ -63,6 +63,7 @@ private:
 
     tsf*            m_tsf       = nullptr;
     ma_device       m_device;
+    ma_context      m_context;
     ma_mutex        m_mutex;
     bool            m_audioOk   = false;
 

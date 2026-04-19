@@ -42,7 +42,6 @@ private slots:
     void updateLatestSoundFonts();
     void connectMidi(int id);
     void updatePorts();
-    void updateListInstruments(QString&);
     void loadInstrument(int id);
     void getConfigPathLoad();
     void loadConfig(QString& configPath);
@@ -58,6 +57,7 @@ private:
     void keyReleaseEvent(QKeyEvent *event) override;
 
     QString m_configPath;
+    QString m_soundFontPath;
 
     QMenu *mListePeripheriques;
     QMenu *mListeLatestConfigs;
