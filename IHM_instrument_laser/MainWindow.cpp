@@ -433,24 +433,16 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(m_engine, &EngineLaser::noteRecueMidi,
-            this, [=](int midiNote, bool active) {
-                for (int i = 0; i < 6; i++) {
-                    // FIXME : what is this ?
-                    SAFE_DELETE(m_accords);
-                    m_accords = m_engine->getAccords();
-                    for(int i = 0; i < m_accords->n_notes; i++)
-                    {
-                        if (active)
-                        {
-                            allumerBarre(midiNote);
-                            m_btnLaser[midiNote]->setIcon(QIcon(":/allume.png"));
-                        }
-                        else
-                        {
-                            eteindreBarre(midiNote);
-                            m_btnLaser[midiNote]->setIcon(QIcon());
-                        }
-                    }
+            this, [=](int index_touche, bool active) {
+                if (active)
+                {
+                    allumerBarre(index_touche);
+                    m_btnLaser[index_touche]->setIcon(QIcon(":/allume.png"));
+                }
+                else
+                {
+                    eteindreBarre(index_touche);
+                    m_btnLaser[index_touche]->setIcon(QIcon());
                 }
             });
 
