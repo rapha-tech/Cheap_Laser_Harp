@@ -72,6 +72,10 @@ void RecentFiles::write()
     yyjson_mut_val *ListSoundFonts_arr = yyjson_mut_arr(doc);
     yyjson_mut_val *ListConfigs_arr = yyjson_mut_arr(doc);
 
+    unsigned int Npointers = m_ListSoundFonts.length() + m_ListConfigs.length();
+    m_pointers = new char*[Npointers];
+    m_idPointer = 0;
+
     addQStrArray(doc, ListSoundFonts_arr, m_ListSoundFonts);
     addQStrArray(doc, ListConfigs_arr, m_ListConfigs);
 
@@ -87,6 +91,12 @@ void RecentFiles::write()
 
     // Free the memory of doc and all values which is created from this doc.
     yyjson_mut_doc_free(doc);
+
+    for(unsigned int i = 0; i < Npointers; i++)
+    {
+        delete m_pointers[i];
+    }
+    delete[] m_pointers;
 }
 
 void RecentFiles::addQStrArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, QStringList& QstrList)
@@ -98,7 +108,8 @@ void RecentFiles::addQStrArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, QString
         strcpy(str, QstrList[i].toLocal8Bit());
         value = yyjson_mut_str(doc, str);
         yyjson_mut_arr_append(arr, value);
-        // FIXME : fix memory leak caused by str
+
+        m_pointers[m_idPointer++] = str; // store the pointer for later delete
     }
 }
 
