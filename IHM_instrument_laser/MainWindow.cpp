@@ -477,10 +477,6 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
 
-    QTimer::singleShot(0, this, [this]() {
-        repositionnerTouchesNoires();
-    });
-
     QTimer::singleShot(0, [=]() {
         QScrollBar *hbar = pianoScroll->horizontalScrollBar();
         hbar->setValue((hbar->minimum() + hbar->maximum()) / 2);
@@ -582,52 +578,12 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
-// ─────────────────────────────────────────────
-void MainWindow::resizeEvent(QResizeEvent *event)
-{
-    QMainWindow::resizeEvent(event);
-    repositionnerTouchesNoires();
-}
-
-
-void MainWindow::repositionnerTouchesNoires()
-{
-    if (m_touchesBlanches.isEmpty() || m_touchesNoires.isEmpty()) return;
-    if (!m_pianoWidget) return;
-
-    QWidget *overlay = m_touchesNoires.first()->parentWidget();
-    if (!overlay) return;
-    overlay->setGeometry(0, 0, m_pianoWidget->width(), 75);
-
-    int noirIdx = 0;
-    int blancIdx = 0;
-    for (int idx = 0; idx < NOTES_TOTAL; idx++)
-    {
-        if(IS_NOIRE[idx % 12])
-        {
-            if (noirIdx >= m_touchesNoires.size()) break;
-            if (blancIdx < 0) { noirIdx++; continue;}
-
-            QRect gL = m_touchesBlanches[blancIdx]->geometry();
-            QRect gR = m_touchesBlanches[blancIdx - 1]->geometry();
-            int xCenter = (gL.right() + gR.left()) / 2;
-            m_touchesNoires[noirIdx]->move(xCenter - 9, 0);
-            m_touchesNoires[noirIdx]->raise();
-            noirIdx++;
-        }
-        else
-        {
-            blancIdx++;
-        }
-    }
-}
-
 
 void MainWindow::resetStylePiano()
 {
     for (auto t : m_touchesBlanches) t->setStyleSheet(S_BLANCHE);
     for (auto t : m_touchesNoires)   t->setStyleSheet(S_NOIRE);
-    for(int i = 0; i < NOTES_DISPLAYED; i++)
+    for(int i = 0; i < NOTES_TOTAL; i++)
     {
         m_pselectedTouches[i] = 0;
     }

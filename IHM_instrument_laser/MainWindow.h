@@ -40,7 +40,6 @@ public:
     void isEngineOk();
 
 protected:
-    void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
 
@@ -69,7 +68,6 @@ private slots:
     void saveConfigAs();
 
 private:
-    void repositionnerTouchesNoires();
     void resetStylePiano();
 
     QString m_configPath;
