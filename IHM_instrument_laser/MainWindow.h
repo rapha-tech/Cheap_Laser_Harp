@@ -45,6 +45,7 @@ private slots:
     void updateLatestSoundFonts();
     void connectMidi(int id);
     void updatePorts();
+    void updateAudioOuts();
     void loadInstrument(int id, bool setRow = true);
     void getConfigPathLoad();
     void loadConfig(QString& configPath);
@@ -64,6 +65,7 @@ private:
     QMenu *mListePeripheriques;
     QMenu *mListeLatestConfigs;
     QMenu *mListeLatestSoundFont;
+    QMenu *mListeAudioOut;
     QSlider *sliderVol;
 
     QVector<QFrame*> m_barres;

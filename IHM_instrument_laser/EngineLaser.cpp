@@ -23,7 +23,7 @@ EngineLaser::~EngineLaser()
         tsf_close(m_tsf);
 }
 
-bool EngineLaser::initEngine(QString& soundFontPath)
+bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
 {
     if (m_audioOk) {
         ma_device_uninit(&m_device);
@@ -47,13 +47,18 @@ bool EngineLaser::initEngine(QString& soundFontPath)
         return 0;
     }
 
-    qDebug() << "Playback Devices : ";
-    for (ma_uint32  iDevice = 0; iDevice < playbackDeviceCount; ++iDevice) {
-        qDebug() << "   " << iDevice << " : " << pPlaybackDeviceInfos[iDevice].name;
+    if(idAudioOut == -1 || idAudioOut >= playbackDeviceCount)
+    {
+        idAudioOut = 0;
+        for (ma_uint32  iDevice = 0; iDevice < playbackDeviceCount; ++iDevice)
+        {
+            if(pPlaybackDeviceInfos[iDevice].isDefault)
+                idAudioOut = iDevice; // save default device id
+        }
     }
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
-    config.playback.pDeviceID       = &pPlaybackDeviceInfos[0].id;
+    config.playback.pDeviceID       = &pPlaybackDeviceInfos[idAudioOut].id;
     config.playback.format          = ma_format_f32;
     config.playback.channels        = 2;
     config.sampleRate               = 44100;
@@ -93,7 +98,7 @@ bool EngineLaser::initEngine(QString& soundFontPath)
     }
 
     m_audioOk = true;
-    qDebug() << "EngineLaser: audio OK";
+    qDebug() << "EngineLaser: init sucessfull";
     return 1;
 }
 
@@ -247,6 +252,33 @@ QStringList EngineLaser::getMidiPorts()
     return liste;
 }
 
+QStringList EngineLaser::getAudioOuts()
+{
+    QStringList liste;
+
+    ma_result result = ma_context_init(NULL, 0, NULL, &m_context);
+    if (result != MA_SUCCESS)
+    {
+        return liste;
+    }
+
+    ma_device_info* pPlaybackDeviceInfos;
+    ma_uint32 playbackDeviceCount;
+    result = ma_context_get_devices(&m_context, &pPlaybackDeviceInfos, &playbackDeviceCount, NULL, NULL);
+    if (result != MA_SUCCESS)
+    {
+        ma_context_uninit(&m_context);
+        return liste;
+    }
+
+    for (ma_uint32  iDevice = 0; iDevice < playbackDeviceCount; ++iDevice)
+        liste << pPlaybackDeviceInfos[iDevice].name;
+
+    qDebug() << "EngineLaser : returned Audio Outputs : " << liste;
+
+    return liste;
+}
+
 void EngineLaser::stopMidi()
 {
     if (m_midiIn) {
@@ -321,9 +353,14 @@ accord_t* EngineLaser::getAccords()
     return accordcpy;
 }
 
-void  EngineLaser::setAccords(accord_t* accordcpy)
+void EngineLaser::setAccords(accord_t* accordcpy)
 {
-    delete m_accords;
+    if(m_accords != nullptr)
+    {
+        delete m_accords;
+        m_accords = nullptr;
+    }
+
     m_accords = new accord_t[6];
     for(int i = 0; i < 6; i++)
     {

@@ -165,18 +165,22 @@ MainWindow::MainWindow(QWidget *parent)
 
     mListeLatestSoundFont = new QMenu("&SoundFont recentes");
     mInstrument->addMenu(mListeLatestSoundFont);
-
     connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
         updateLatestSoundFonts();
     });
 
-    mListePeripheriques = new QMenu("&Peripheriques");
+    mListePeripheriques = new QMenu("&Instruments Midi");
     mInstrument->addMenu(mListePeripheriques);
     menuBar()->addMenu(mInstrument);
-
     // this action is used to update the list of available Midi ports when the menu bar is triggered
     connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
         updatePorts();
+    });
+
+    mListeAudioOut = new QMenu("&Sorties Audio");
+    mInstrument->addMenu(mListeAudioOut);
+    connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
+        updateAudioOuts();
     });
 
 
@@ -833,6 +837,31 @@ void MainWindow::updatePorts()
     else
     {
         mListePeripheriques->addAction("&Aucun peripherique compatible");
+    }
+}
+
+void MainWindow::updateAudioOuts()
+{
+    if(!mListeAudioOut->isEmpty())
+        mListeAudioOut->clear();
+
+    QStringList ListeAudioOut = m_engine->getAudioOuts();
+
+    if(ListeAudioOut.size() > 0)
+    {
+        for(unsigned int i = 0; i < ListeAudioOut.size(); i++)
+        {
+            QAction* actionsAudioOut = new QAction(ListeAudioOut[i], this);
+            mListeAudioOut->addAction(actionsAudioOut);
+            connect(actionsAudioOut, &QAction::triggered, this, [=]() {
+                m_engine->initEngine(m_soundFontPath, i);
+                // we might have to reinit midi ?
+            });
+        }
+    }
+    else
+    {
+        mListePeripheriques->addAction("&Aucune sortie audio");
     }
 }
 
