@@ -65,8 +65,8 @@ bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
     config.dataCallback             = EngineLaser::audioCallback;
     config.pUserData                = this;
     // TODO : find the optimal values
-    config.periodSizeInMilliseconds = 10;
-    config.periods                  = 3;
+    config.periodSizeInMilliseconds = 6;
+    config.periods                  = 2;
 
     if (ma_device_init(&m_context, &config, &m_device) != MA_SUCCESS)
     {

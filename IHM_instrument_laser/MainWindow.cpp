@@ -43,6 +43,8 @@ static const QString S_BLANCHE =
     "  background-color: #FFFFFF;"
     "  border: 1px solid #000000;"
     "  color: black;"
+    "  text-align: bottom center;"
+    "  padding-bottom: 20px;"
     "  font-size: 9px;"
     "}"
     "QPushButton:hover {"
@@ -53,14 +55,22 @@ static const QString S_BLANCHE =
     "}";
 static const QString S_BLANCHE_SEL =
     "QPushButton {"
-     " background-color: rgba(30, 60, 120, 180);"  // bleu nuit
-     " border: 2px solid rgba(100, 150, 255, 220);" // contour lumineux
+    " background-color: rgba(30, 60, 120, 180);"  // bleu nuit
+    " border: 2px solid rgba(100, 150, 255, 220);" // contour lumineux
+    "  color: black;"
+    "  text-align: bottom center;"
+    "  padding-bottom: 20px;"
+    "  font-size: 9px;"
     "}";
 
 static const QString S_BLANCHE_PLAY =
     "QPushButton {"
     " background-color: #ff00ff;" // violet
     " border: 1px solid #000000;" // contour noir
+    "  color: black;"
+    "  text-align: bottom center;"
+    "  padding-bottom: 20px;"
+    "  font-size: 9px;"
     "}";
 
 static const QString S_NOIRE =
@@ -785,7 +795,7 @@ void MainWindow::loadSoundFont(QString& soundFontPath, int instrumentId)
 
 void MainWindow::loadInstrument(int id, bool setRow)
 {
-    if(id != m_instrumentId)
+    if((id != m_instrumentId) && (id >= 0))
     {
         m_instrumentId = id;
         if(setRow)
@@ -855,7 +865,7 @@ void MainWindow::updateAudioOuts()
             mListeAudioOut->addAction(actionsAudioOut);
             connect(actionsAudioOut, &QAction::triggered, this, [=]() {
                 m_engine->initEngine(m_soundFontPath, i);
-                // we might have to reinit midi ?
+                // FIXME : we might have to reinit midi ?
             });
         }
     }

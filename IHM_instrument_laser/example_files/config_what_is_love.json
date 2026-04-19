@@ -1,0 +1,34 @@
+{
+  "soundfont_path": "D:/SoundFont/FluidR3_GM2-2.SF2",
+  "instrument_id": 146,
+  "volume_level": 60,
+  "Midi_port_id": 0,
+  "notes_laser_0": [
+    55,
+    58,
+    62
+  ],
+  "notes_laser_1": [
+    58,
+    63
+  ],
+  "notes_laser_2": [
+    53,
+    58,
+    62
+  ],
+  "notes_laser_3": [
+    53,
+    57,
+    62
+  ],
+  "notes_laser_4": [
+    57,
+    63
+  ],
+  "notes_laser_5": [
+    57,
+    60,
+    65
+  ]
+}
