@@ -25,10 +25,11 @@ public:
     bool isAudioOk();
 
     // Instrument
-    void         loadSoundFont(QString&);
-    QStringList  getInstrumentsDisponibles() const;
-    void         chargerInstrument(int idInstrument);
-    QStringList  getAudioOuts();
+    void loadSoundFont(QString&);
+    void chargerInstrument(int idInstrument);
+
+    QStringList getInstrumentsDisponibles() const;
+    QStringList getAudioOuts();
 
     // Notes lasers
     void jouerLaser(int laserId);
@@ -43,7 +44,7 @@ public:
 
     // MIDI
     QStringList getMidiPorts();
-    bool initMidi(unsigned int id = 0);
+    bool initMidi(QString&);
     void stopMidi();
 
     // Utilitaire

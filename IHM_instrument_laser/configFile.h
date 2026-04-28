@@ -9,10 +9,10 @@
 class configFile
 {
 private:
-    QString SoundFont_path;
+    QString soundFont_path;
     int instrument_id;
     int volume;
-    int port_id;
+    QString midi_port_name;
     accord_t* m_accords;
 
     void setAccordJson(yyjson_val* key, accord_t* accords, int id_laser);
@@ -25,14 +25,14 @@ public:
     QString get_soundFont_path();
     int get_instr_id();
     int get_volume();
-    int get_port_id();
+    QString get_port_name();
     accord_t* getAccords();
     accord_t* get_default_accord();
 
     void set_soundFont_path(QString&);
     void set_instr_id(int);
     void set_volume(int);
-    void set_port_id(int);
+    void set_port_name(QString&);
     void set_accords(accord_t* accordcpy);
 };
 

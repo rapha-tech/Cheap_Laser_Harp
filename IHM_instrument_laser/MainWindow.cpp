@@ -805,8 +805,8 @@ void MainWindow::setVolume(int val, bool slider)
 void MainWindow::connectMidi(int id)
 {
     m_engine->stopMidi();
-    m_engine->initMidi(id);
-    m_configFile->set_port_id(id);
+    m_engine->initMidi(m_listePortsMidi[id]);
+    m_configFile->set_port_name(m_listePortsMidi[id]);
 }
 
 void MainWindow::updatePorts()
@@ -815,13 +815,13 @@ void MainWindow::updatePorts()
         mListePeripheriques->clear();
 
     // On ajouter les périphériques disponibles (connectés au PC)
-    QStringList ListePorts = m_engine->getMidiPorts();
+    m_listePortsMidi = m_engine->getMidiPorts();
 
-    if(ListePorts.size() > 0)
+    if(m_listePortsMidi.size() > 0)
     {
-        for(unsigned int i = 0; i < ListePorts.size(); i++)
+        for(unsigned int i = 0; i < m_listePortsMidi.size(); i++)
         {
-            QAction* actionsPort = new QAction(ListePorts[i], this);
+            QAction* actionsPort = new QAction(m_listePortsMidi[i], this);
             mListePeripheriques->addAction(actionsPort);
             connect(actionsPort, &QAction::triggered, this, [=]() {
                 connectMidi(i);
@@ -925,12 +925,12 @@ void MainWindow::loadConfig(QString& configPath)
     QString soundFontPath = m_configFile->get_soundFont_path();
     int instrumentId = m_configFile->get_instr_id();
     int volume = m_configFile->get_volume();
-    int port_id = m_configFile->get_port_id();
+    QString midi_port_name = m_configFile->get_port_name();
 
     loadSoundFont(soundFontPath, instrumentId);
     setVolume(volume, true);
 
-    m_engine->initMidi(port_id);
+    m_engine->initMidi(midi_port_name);
 
     SAFE_DELETE(m_accords);
     m_accords = m_configFile->getAccords();

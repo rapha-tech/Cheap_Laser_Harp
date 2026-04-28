@@ -81,6 +81,8 @@ private:
     QMenu *mListeAudioOut;
     QSlider *sliderVol;
 
+    QStringList m_listePortsMidi;
+
     QVector<QFrame*> m_barres;
     QVector<QPushButton*> m_btnLaser;
     QVector<QPushButton*> m_btnAssign;

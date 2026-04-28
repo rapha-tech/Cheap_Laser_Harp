@@ -6,7 +6,7 @@
 //        "soundfont_path": "C:\Users\Documents\sf2\Vintage.sf2",
 //        "instrument_id": 12,
 //        "volume_level": 80,
-//        "Midi_port_id": 0,
+//        "midi_port_name": 0,
 //        "notes_laser_0":[54]
 //        "notes_laser_1":[56, 57]
 //        "notes_laser_2":[59, 60]
@@ -17,12 +17,11 @@
 
 configFile::configFile(QString& configFilePath)
 {
-    // Default values if no file is found
-    SoundFont_path = QString();
+    // Default values if no file is found or if the field isn't present
+    soundFont_path = QString();
     instrument_id = 0;
     volume = 80;
-    port_id = 0;
-
+    midi_port_name = QString();
     m_accords = get_default_accord();
 
     yyjson_doc *doc = yyjson_read_file(configFilePath.toLocal8Bit(), 0, NULL, NULL);
@@ -39,7 +38,7 @@ configFile::configFile(QString& configFilePath)
             if(!strcmp(yyjson_get_str(key), "soundfont_path"))
             {
                 val = yyjson_obj_iter_get_val(key);
-                SoundFont_path = QString(yyjson_get_str(val));
+                soundFont_path = QString(yyjson_get_str(val));
             }
             else if(!strcmp(yyjson_get_str(key), "instrument_id"))
             {
@@ -51,10 +50,10 @@ configFile::configFile(QString& configFilePath)
                 val = yyjson_obj_iter_get_val(key);
                 volume = yyjson_get_uint(val);
             }
-            else if(!strcmp(yyjson_get_str(key), "Midi_port_id"))
+            else if(!strcmp(yyjson_get_str(key), "midi_port_name"))
             {
                 val = yyjson_obj_iter_get_val(key);
-                port_id = yyjson_get_uint(val);
+                midi_port_name = QString(yyjson_get_str(val));
             }
             else if(!strcmp(yyjson_get_str(key), "notes_laser_0"))
             {
@@ -106,7 +105,6 @@ void configFile::setAccordJson(yyjson_val* key, accord_t* accords, int id_laser)
     accords[id_laser].n_notes = i;
 }
 
-
 void configFile::write(QString& conFigFilePath)
 {
     // Create a mutable document. ie can be modified
@@ -116,8 +114,8 @@ void configFile::write(QString& conFigFilePath)
     yyjson_mut_val *root = yyjson_mut_obj(doc);
 
     // SoundFont path
-    yyjson_mut_val *val_SoundFont_path = yyjson_mut_str(doc, SoundFont_path.toLocal8Bit());
-    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "soundfont_path"), val_SoundFont_path);
+    yyjson_mut_val *val_soundFont_path = yyjson_mut_str(doc, soundFont_path.toLocal8Bit());
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "soundfont_path"), val_soundFont_path);
 
     // Instrument id
     yyjson_mut_val *num_0 = yyjson_mut_int(doc, instrument_id);
@@ -128,8 +126,8 @@ void configFile::write(QString& conFigFilePath)
     yyjson_mut_obj_add(root, yyjson_mut_str(doc, "volume_level"), num_1);
 
     // Midi port id
-    yyjson_mut_val *num_2 = yyjson_mut_int(doc, port_id);
-    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "Midi_port_id"), num_2);
+    yyjson_mut_val *val_midi_port_name = yyjson_mut_str(doc, midi_port_name.toLocal8Bit());
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "midi_port_name"), val_midi_port_name);
 
     // notes arrays
     yyjson_mut_val *notes_arr_0 = yyjson_mut_arr(doc);
@@ -177,7 +175,7 @@ void configFile::addNotesArray(yyjson_mut_doc* doc, yyjson_mut_val* arr, int id_
 
 QString configFile::get_soundFont_path()
 {
-    return SoundFont_path;
+    return soundFont_path;
 }
 
 int configFile::get_instr_id()
@@ -190,9 +188,9 @@ int configFile::get_volume()
     return volume;
 }
 
-int configFile::get_port_id()
+QString configFile::get_port_name()
 {
-    return port_id;
+    return midi_port_name;
 }
 
 accord_t* configFile::getAccords()
@@ -224,10 +222,9 @@ accord_t* configFile::get_default_accord()
     return accords;
 }
 
-
 void configFile::set_soundFont_path(QString& path)
 {
-    SoundFont_path = path;
+    soundFont_path = path;
 }
 
 void configFile::set_instr_id(int id)
@@ -240,9 +237,9 @@ void configFile::set_volume(int vol)
     volume = vol;
 }
 
-void configFile::set_port_id(int id)
+void configFile::set_port_name(QString& name)
 {
-    port_id = id;
+    midi_port_name = name;
 }
 
 void configFile::set_accords(accord_t* accordcpy)
