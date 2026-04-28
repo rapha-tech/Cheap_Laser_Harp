@@ -524,57 +524,61 @@ void MainWindow::isEngineOk()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if(event->key() == Qt::Key_Q)
+    switch(event->key())
     {
+    case Qt::Key_Q:
         jouerLaser(0);
-    }
-    else if(event->key() == Qt::Key_S)
-    {
+        break;
+
+    case Qt::Key_S:
         jouerLaser(1);
-    }
-    else if(event->key() == Qt::Key_D)
-    {
+        break;
+
+    case Qt::Key_D:
         jouerLaser(2);
-    }
-    else if(event->key() == Qt::Key_F)
-    {
+        break;
+
+    case Qt::Key_F:
         jouerLaser(3);
-    }
-    else if(event->key() == Qt::Key_G)
-    {
+        break;
+
+    case Qt::Key_G:
         jouerLaser(4);
-    }
-    else if(event->key() == Qt::Key_H)
-    {
+        break;
+
+    case Qt::Key_H:
         jouerLaser(5);
+        break;
     }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
-    if(event->key() == Qt::Key_Q)
+    switch(event->key())
     {
+    case Qt::Key_Q:
         stopperLaser(0);
-    }
-    else if(event->key() == Qt::Key_S)
-    {
+        break;
+
+    case Qt::Key_S:
         stopperLaser(1);
-    }
-    else if(event->key() == Qt::Key_D)
-    {
+        break;
+
+    case Qt::Key_D:
         stopperLaser(2);
-    }
-    else if(event->key() == Qt::Key_F)
-    {
+        break;
+
+    case Qt::Key_F:
         stopperLaser(3);
-    }
-    else if(event->key() == Qt::Key_G)
-    {
+        break;
+
+    case Qt::Key_G:
         stopperLaser(4);
-    }
-    else if(event->key() == Qt::Key_H)
-    {
+        break;
+
+    case Qt::Key_H:
         stopperLaser(5);
+        break;
     }
 }
 

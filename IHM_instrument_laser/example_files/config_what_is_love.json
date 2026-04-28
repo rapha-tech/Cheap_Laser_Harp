@@ -1,8 +1,8 @@
 {
-  "soundfont_path": "D:/SoundFont/FluidR3_GM2-2.SF2",
-  "instrument_id": 146,
+  "soundfont_path": "D:/Cheap_Laser_Harp/IHM_instrument_laser/build/Desktop_Qt_6_10_2_MinGW_64_bit-Release/release/florestan-subset.sf2",
+  "instrument_id": 0,
   "volume_level": 60,
-  "Midi_port_id": 0,
+  "midi_port_name": "",
   "notes_laser_0": [
     55,
     58,
