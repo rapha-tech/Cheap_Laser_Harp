@@ -123,16 +123,16 @@ MainWindow::MainWindow(QWidget *parent)
     m_engine = new EngineLaser(this);
 
     QMenu *mFichier = menuBar()->addMenu("&Fichier");
-    QAction *actionnv = new QAction("&Nouveau projet ", this);
+    QAction *actionnv = new QAction("&Nouveau projet", this);
     mFichier->addAction(actionnv);
     actionnv->setShortcut(QKeySequence(tr("Ctrl + N")));
     connect(actionnv, SIGNAL(triggered()), this, SLOT(nouveau()));
 
-    QAction *actionCharger = new QAction("&Charger configuration", this);
+    QAction *actionCharger = new QAction("&Ouvrir une configuration...", this);
     mFichier->addAction(actionCharger);
     connect(actionCharger, SIGNAL(triggered()), this, SLOT(getConfigPathLoad()));
 
-    mListeLatestConfigs = new QMenu("&Configurations recentes");
+    mListeLatestConfigs = new QMenu("&Configurations récentes");
     mFichier->addMenu(mListeLatestConfigs);
 
     connect(mFichier, &QMenu::aboutToShow, this, [=]() {
@@ -144,7 +144,7 @@ MainWindow::MainWindow(QWidget *parent)
     actionSave->setShortcut(QKeySequence(tr("Ctrl + S")));
     connect(actionSave, SIGNAL(triggered()), this, SLOT(saveConfig()));
 
-    QAction *actionSaveAs = new QAction("&Enregistrer sous", this);
+    QAction *actionSaveAs = new QAction("&Enregistrer sous...", this);
     mFichier->addAction(actionSaveAs);
     connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(saveConfigAs()));
 
@@ -157,19 +157,19 @@ MainWindow::MainWindow(QWidget *parent)
 
 
 
-    QMenu *mInstrument = new QMenu("&Instrument");
+    QMenu *mInstrument = new QMenu("&Son");
 
-    QAction *actionSF2 = new QAction("&Charger SoundFont", this);
+    QAction *actionSF2 = new QAction("&Charger une SoundFont...", this);
     mInstrument->addAction(actionSF2);
     connect(actionSF2, SIGNAL(triggered()), this, SLOT(getSoundFontPath()));
 
-    mListeLatestSoundFont = new QMenu("&SoundFont recentes");
+    mListeLatestSoundFont = new QMenu("&SoundFont récentes");
     mInstrument->addMenu(mListeLatestSoundFont);
     connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
         updateLatestSoundFonts();
     });
 
-    mListePeripheriques = new QMenu("&Instruments Midi");
+    mListePeripheriques = new QMenu("&Périphérique Midi entrant");
     mInstrument->addMenu(mListePeripheriques);
     menuBar()->addMenu(mInstrument);
     // this action is used to update the list of available Midi ports when the menu bar is triggered
@@ -177,7 +177,7 @@ MainWindow::MainWindow(QWidget *parent)
         updatePorts();
     });
 
-    mListeAudioOut = new QMenu("&Sorties Audio");
+    mListeAudioOut = new QMenu("&Sortie Audio");
     mInstrument->addMenu(mListeAudioOut);
     connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
         updateAudioOuts();
@@ -185,7 +185,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     QMenu *mLasers = menuBar()->addMenu("&Lasers");
-    QAction *reinitialiser = new QAction("&Reinitialiser les assignations", this);
+    QAction *reinitialiser = new QAction("&Réinitialiser les assignations", this);
     mLasers->addAction(reinitialiser);
     reinitialiser->setShortcut(QKeySequence(tr("Ctrl + R")));
 
@@ -197,7 +197,7 @@ MainWindow::MainWindow(QWidget *parent)
                     m_engine->setAccords(m_accords);
                 }
             });
-    mLasers->addAction("&Parametres...");
+    mLasers->addAction("&[TODO]Parametres");
 
     QMenu *mAffichage = menuBar()->addMenu("&Affichage");
     QAction *actionFullScreen = mAffichage->addAction("&Passer en plein écran");
@@ -212,7 +212,45 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
+    QAction *actionAfficherNotes = mAffichage->addAction("&[TODO]Afficher les notes sur les touches");
+    // TODO : make function
+
+    QAction *actionTheme = mAffichage->addAction("&[TODO]Changer de thème");
+    // TODO : make function
+
+
     QMenu *mAide = menuBar()->addMenu("Aide");
+
+    connect(mAide->addAction("&A propos"), &QAction::triggered, this, [=]() {
+        QMessageBox about(this);
+        about.setWindowTitle("A propos");
+        about.setIcon(QMessageBox::Information);
+        about.setText(
+            "<h3>Harpe Laser</h3>"
+            "<p>Projet réalisé dans le cadre d'un projet de 3ème année.</p>"
+            "<p><b>Equipe 2 :</b> Lot 2</p>"
+            "<hr>"
+            "<p>Un instrument de musique laser interactif - "
+            "assignez des notes à chaque laser, "
+            "choisissez votre instrument et jouez !</p>"
+            "<p><i>Amusez-vous bien !</i></p>"
+
+            );
+        about.setStandardButtons(QMessageBox::Ok);
+        about.exec();
+    });
+
+    connect(mAide->addAction("&Guide démarrage rapide"), &QAction::triggered, this, [=]() {
+        QMessageBox guide(this);
+        guide.setWindowTitle("Guide démarrage rapide");
+        guide.setIcon(QMessageBox::Information);
+        guide.setText(
+            "<h3>TODO</h3>"
+            );
+        guide.setStandardButtons(QMessageBox::Ok);
+        guide.exec();
+    });
+
 
     // ── Layout principal ──
     QWidget *central = new QWidget(this);
@@ -241,8 +279,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     QPushButton *rendreactif = new QPushButton("Rendre Actif");
-    rendreactif->setShortcut(QKeySequence(tr("Ctrl + R")));
-
     connect(rendreactif, &QPushButton::clicked, this, &MainWindow::actif);
     left->addWidget(rendreactif);
 
@@ -480,25 +516,6 @@ MainWindow::MainWindow(QWidget *parent)
     QTimer::singleShot(0, [=]() {
         QScrollBar *hbar = pianoScroll->horizontalScrollBar();
         hbar->setValue((hbar->minimum() + hbar->maximum()) / 2);
-    });
-
-    connect(mAide->addAction("&A propos"), &QAction::triggered, this, [=]() {
-        QMessageBox about(this);
-        about.setWindowTitle("A propos");
-        about.setIcon(QMessageBox::Information);
-        about.setText(
-            "<h3>Harpe Laser</h3>"
-            "<p>Projet réalisé dans le cadre d'un projet de 3ème année.</p>"
-            "<p><b>Equipe 2 :</b> Lot 2</p>"
-            "<hr>"
-            "<p>Un instrument de musique laser interactif - "
-            "assignez des notes à chaque laser, "
-            "choisissez votre instrument et jouez !</p>"
-            "<p><i>Amusez-vous bien !</i></p>"
-
-            );
-        about.setStandardButtons(QMessageBox::Ok);
-        about.exec();
     });
 }
 
