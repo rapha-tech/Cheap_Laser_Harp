@@ -197,7 +197,7 @@ MainWindow::MainWindow(QWidget *parent)
                     m_engine->setAccords(m_accords);
                 }
             });
-    mLasers->addAction("&[TODO]Parametres");
+
 
     QMenu *mAffichage = menuBar()->addMenu("&Affichage");
     QAction *actionFullScreen = mAffichage->addAction("&Passer en plein écran");
@@ -212,7 +212,10 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    QAction *actionAfficherNotes = mAffichage->addAction("&[TODO]Afficher les notes sur les touches");
+    QAction *actionAfficherNotes = mAffichage->addAction("&Afficher les notes sur les touches");
+    connect(actionAfficherNotes, &QAction::triggered, this, [=]() {
+        toggleNotes();
+    });
     // TODO : make function
 
     QAction *actionTheme = mAffichage->addAction("&[TODO]Changer de thème");
@@ -598,11 +601,37 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
+void MainWindow::toggleNotes()
+{
+    if(m_touchesBlanches[0]->text() == "")
+    {
+        int noteId = 0;
+
+        for(int i = 0; i < NOTES_TOTAL; i++)
+        {
+            if(!IS_NOIRE[i % 12])
+            {
+                noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[i + DEFAULT_OCTAVE];
+                m_touchesBlanches[noteId]->setText(NOTES_NAMES[i % 12]);
+
+            }
+        }
+    }
+    else
+    {
+        for(int i = 0; i < m_touchesBlanches.size(); i++)
+            m_touchesBlanches[i]->setText("");
+    }
+}
 
 void MainWindow::resetStylePiano()
 {
-    for (auto t : m_touchesBlanches) t->setStyleSheet(S_BLANCHE);
-    for (auto t : m_touchesNoires)   t->setStyleSheet(S_NOIRE);
+    for(int i = 0; i < m_touchesBlanches.size(); i++)
+        m_touchesBlanches[i]->setStyleSheet(S_BLANCHE);
+
+    for(int i = 0; i < m_touchesNoires.size(); i++)
+        m_touchesNoires[i]->setStyleSheet(S_NOIRE);
+
     for(int i = 0; i < NOTES_TOTAL; i++)
     {
         m_pselectedTouches[i] = 0;

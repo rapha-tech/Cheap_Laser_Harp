@@ -51,6 +51,7 @@ private slots:
     void eteindreBarre(int id);
     void toggleAssignation(int id);
     void toggleTouche(int noteMidi);
+    void toggleNotes();
     void nouveau();
     void actif();
     void getSoundFontPath();
