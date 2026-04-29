@@ -219,7 +219,7 @@ MainWindow::MainWindow(QWidget *parent)
     // TODO : make function
 
 
-    QMenu *mAide = menuBar()->addMenu("Aide");
+    QMenu *mAide = menuBar()->addMenu("&Aide");
 
     connect(mAide->addAction("&A propos"), &QAction::triggered, this, [=]() {
         QMessageBox about(this);
@@ -499,17 +499,16 @@ MainWindow::MainWindow(QWidget *parent)
     m_recentFiles = new RecentFiles;
     QStringList recentConfigs = m_recentFiles->getListConfigs();
 
-    m_configPath = QString(DEFAULT_CONFIG_PATH);
     if(recentConfigs.isEmpty())
     {
         // load default config
-        loadConfig(m_configPath);
+        QString default_configPath = QString(DEFAULT_CONFIG_PATH);
+        loadConfig(default_configPath);
     }
     else
     {
         // load latest config file
-        m_configPath = recentConfigs[0];
-        loadConfig(m_configPath);
+        loadConfig(recentConfigs[0]);
     }
 
 
@@ -769,16 +768,26 @@ void MainWindow::getSoundFontPath()
 
 void MainWindow::loadSoundFont(QString& soundFontPath, int instrumentId)
 {
-    if(soundFontPath != m_soundFontPath)
+    if(soundFontPath != m_soundFontPath && soundFontPath != QString())
     {
-        m_configFile->set_soundFont_path(soundFontPath);
-
-        // update latest SoundFont
-        m_recentFiles->addListSoundFonts(soundFontPath);
-        m_recentFiles->write();
-
         // completely restart the engine (probably not necessary but safer)
         m_engine->initEngine(soundFontPath);
+
+        if(m_engine->isAudioOk()) // only save the soundFont if it is a valid one
+        {
+            m_configFile->set_soundFont_path(soundFontPath);
+
+            // update latest SoundFont
+            m_recentFiles->addListSoundFonts(soundFontPath);
+            m_recentFiles->write();
+
+            m_soundFontPath = soundFontPath;
+        }
+        else
+        {
+            // the engine failed to load the new soundFont, fallback to the old one
+            m_engine->initEngine(m_soundFontPath);
+        }
 
         m_choixInstrument->clear();
 
@@ -793,8 +802,6 @@ void MainWindow::loadSoundFont(QString& soundFontPath, int instrumentId)
         }
 
         loadInstrument(instrumentId, true);
-
-        m_soundFontPath = soundFontPath;
     }
 }
 
@@ -934,32 +941,36 @@ void MainWindow::updateLatestSoundFonts()
 void MainWindow::getConfigPathLoad()
 {
     QString configPath = QFileDialog::getOpenFileName(this, tr("Open configuration file"), "", tr("Configuration file (*.json)"));
-    loadConfig(configPath);
+    if(configPath != QString())
+        loadConfig(configPath);
 }
 
 void MainWindow::loadConfig(QString& configPath)
 {
-    SAFE_DELETE(m_configFile);
-    m_configFile = new configFile(configPath);
-    m_configPath = configPath;
+    if(configPath != m_configPath)
+    {
+        SAFE_DELETE(m_configFile);
+        m_configFile = new configFile(configPath);
+        m_configPath = configPath;
 
-    QString soundFontPath = m_configFile->get_soundFont_path();
-    int instrumentId = m_configFile->get_instr_id();
-    int volume = m_configFile->get_volume();
-    QString midi_port_name = m_configFile->get_port_name();
+        QString soundFontPath = m_configFile->get_soundFont_path();
+        int instrumentId = m_configFile->get_instr_id();
+        int volume = m_configFile->get_volume();
+        QString midi_port_name = m_configFile->get_port_name();
 
-    loadSoundFont(soundFontPath, instrumentId);
-    setVolume(volume, true);
+        loadSoundFont(soundFontPath, instrumentId);
+        setVolume(volume, true);
 
-    m_engine->initMidi(midi_port_name);
+        m_engine->initMidi(midi_port_name);
 
-    SAFE_DELETE(m_accords);
-    m_accords = m_configFile->getAccords();
-    m_engine->setAccords(m_accords);
+        SAFE_DELETE(m_accords);
+        m_accords = m_configFile->getAccords();
+        m_engine->setAccords(m_accords);
 
-    // update latest config
-    m_recentFiles->addListConfigs(configPath);
-    m_recentFiles->write();
+        // update latest config
+        m_recentFiles->addListConfigs(configPath);
+        m_recentFiles->write();
+    }
 }
 
 void MainWindow::saveConfig()

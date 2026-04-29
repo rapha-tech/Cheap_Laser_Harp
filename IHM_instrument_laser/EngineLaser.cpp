@@ -28,6 +28,7 @@ bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
     if (m_audioOk) {
         ma_device_uninit(&m_device);
         ma_mutex_uninit(&m_mutex);
+        m_audioOk = false;
     }
     if (m_tsf)
         tsf_close(m_tsf);
@@ -65,7 +66,7 @@ bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
     config.dataCallback             = EngineLaser::audioCallback;
     config.pUserData                = this;
     // TODO : find the optimal values
-    config.periodSizeInMilliseconds = 6;
+    config.periodSizeInMilliseconds = 1; // delay ~14 ms
     config.periods                  = 2;
 
     if (ma_device_init(&m_context, &config, &m_device) != MA_SUCCESS)

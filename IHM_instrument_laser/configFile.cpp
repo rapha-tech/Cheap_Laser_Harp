@@ -6,7 +6,7 @@
 //        "soundfont_path": "C:\Users\Documents\sf2\Vintage.sf2",
 //        "instrument_id": 12,
 //        "volume_level": 80,
-//        "midi_port_name": 0,
+//        "midi_port_name": "instrument midi laser",
 //        "notes_laser_0":[54]
 //        "notes_laser_1":[56, 57]
 //        "notes_laser_2":[59, 60]

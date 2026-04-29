@@ -125,7 +125,8 @@ QStringList RecentFiles::getListSoundFonts()
 
 void RecentFiles::addListConfigs(QString& QStr)
 {
-    addQStringList(m_ListConfigs, QStr);
+    if(QStr != QString())
+        addQStringList(m_ListConfigs, QStr);
 }
 
 void RecentFiles::addListSoundFonts(QString& QStr)
@@ -133,19 +134,19 @@ void RecentFiles::addListSoundFonts(QString& QStr)
     addQStringList(m_ListSoundFonts, QStr);
 }
 
-void RecentFiles::addQStringList(QStringList& StrList, QString& QStr)
+void RecentFiles::addQStringList(QStringList& QStrList, QString& QStr)
 {
-    if(!StrList.contains(QStr))
+    if(!QStrList.contains(QStr))
     {
         // the element is not in the list
         QStringList TempList = QStringList();
 
         TempList.append(QStr);
-        for(int i = 0; i < StrList.count(); i++)
+        for(int i = 0; i < QStrList.count(); i++)
         {
-            TempList.append(StrList[i]);
+            TempList.append(QStrList[i]);
         }
-        StrList = TempList;
+        QStrList = TempList;
         qDebug() << "RecentFile : add Qstr :" << QStr;
     }
     else
@@ -154,12 +155,12 @@ void RecentFiles::addQStringList(QStringList& StrList, QString& QStr)
         QStringList TempList = QStringList();
 
         TempList.append(QStr);
-        for(int i = 0; i < StrList.count(); i++)
+        for(int i = 0; i < QStrList.count(); i++)
         {
-            if(QStr != StrList[i])
-                TempList.append(StrList[i]);
+            if(QStr != QStrList[i])
+                TempList.append(QStrList[i]);
         }
-        StrList = TempList;
+        QStrList = TempList;
         qDebug() << "RecentFile : place Qstr on top :" << QStr;
     }
 }
