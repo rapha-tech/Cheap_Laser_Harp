@@ -261,7 +261,7 @@ MainWindow::MainWindow(QWidget *parent)
     root->setContentsMargins(8, 8, 8, 8);
     root->setSpacing(10);
 
-    QWidget *leftPanel = new QWidget();
+leftPanel   = new QWidget();
     leftPanel->setMinimumWidth(160);
     QVBoxLayout *left = new QVBoxLayout(leftPanel);
     left->setContentsMargins(0, 0, 0, 0);
@@ -319,7 +319,6 @@ MainWindow::MainWindow(QWidget *parent)
 
         QFrame *barre = new QFrame();
         barre->setMinimumHeight(100);
-        barre->setFixedWidth(12);
         barre->setStyleSheet("background-color: #222; border-radius: 5px;");
         m_barres[i] = barre;
 
@@ -395,15 +394,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     const int TOTAL_WIDTH = whiteKeyCount * (WHITE_KEY_WIDTH + WHITE_KEY_SPACING);
 
-    QScrollArea *pianoScroll = new QScrollArea();
+pianoScroll = new QScrollArea();
     pianoScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     pianoScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     pianoScroll->setWidgetResizable(false);
     pianoScroll->setFrameShape(QFrame::NoFrame);
-    pianoScroll->setFixedHeight(PIANO_HEIGHT + 18);
 
-    QWidget *pianoCanvas = new QWidget();
-    pianoCanvas->setFixedSize(TOTAL_WIDTH, PIANO_HEIGHT);
+pianoCanvas = new QWidget();
+    pianoCanvas->setMinimumSize(TOTAL_WIDTH, PIANO_HEIGHT);
+    pianoScroll->setMinimumHeight(PIANO_HEIGHT + 18);
 
     QHBoxLayout *pianoLay = new QHBoxLayout(pianoCanvas);
     pianoLay->setSpacing(WHITE_KEY_SPACING);
@@ -415,7 +414,6 @@ MainWindow::MainWindow(QWidget *parent)
         {
             QPushButton *blanc = new QPushButton(NOTES_NAMES[i % 12]);
             blanc->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-            blanc->setFixedWidth(WHITE_KEY_WIDTH);
             blanc->setStyleSheet(S_BLANCHE);
             connect(blanc, &QPushButton::pressed, this, [=]() {
                 m_engine->jouerNoteDirecte(DEFAULT_OCTAVE + i);
@@ -518,6 +516,12 @@ MainWindow::MainWindow(QWidget *parent)
     QTimer::singleShot(0, [=]() {
         QScrollBar *hbar = pianoScroll->horizontalScrollBar();
         hbar->setValue((hbar->minimum() + hbar->maximum()) / 2);
+    });
+
+    connect(actionTheme, &QAction::triggered, this, [=]() {
+        m_darkMode = !m_darkMode;
+        actionTheme->setText(m_darkMode ? "&Passer en mode clair" : "&Passer en mode sombre");
+        applyTheme();
     });
 }
 
@@ -638,6 +642,91 @@ void MainWindow::resetStylePiano()
     }
 }
 
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+    if (!leftPanel || !pianoScroll || !pianoCanvas) return;
+
+    int w = event->size().width();
+    int h = event->size().height();
+
+    // Panneau gauche
+    if (w > 1200)
+        leftPanel->setFixedWidth(w * 0.15);
+    else
+        leftPanel->setFixedWidth(w * 0.20);
+
+
+    for (auto *b : m_barres)
+        b->setFixedWidth(qMax(8, w / 80));
+
+    for (auto *b : m_btnLaser)
+        b->setMinimumHeight(h * 0.22);
+
+    for (auto *b : m_btnAssign)
+        b->setMinimumHeight(h * 0.04);
+
+    int pianoH = h * 0.30;
+    pianoScroll->setFixedHeight(pianoH);
+
+    // blanche
+    int ww = qMax(10, (pianoCanvas->width() / m_touchesBlanches.size()) - 1);
+    for (auto *b : m_touchesBlanches)
+        b->setFixedWidth(ww);
+
+    // noire
+    int bw = ww * 0.65;
+    int bh = (pianoH - 18) * 0.62;
+    int whiteIndex = 0;
+    int noireIdx = 0;
+    for (int i = 0; i < NOTES_TOTAL; i++)
+    {
+        if (!IS_NOIRE[i % 12])
+            whiteIndex++;
+        else
+        {
+            int x = whiteIndex * (ww + 1) - bw / 2;
+            m_touchesNoires[noireIdx]->setFixedSize(bw, bh);
+            m_touchesNoires[noireIdx]->move(x, 0);
+            noireIdx++;
+        }
+    }
+    int totalWidth = m_touchesBlanches.size() * (ww + 1);
+    pianoCanvas->setFixedSize(totalWidth, pianoH - 18);
+}
+#include <QApplication>
+
+void MainWindow::applyTheme()
+{
+    if (m_darkMode)
+    {
+        qApp->setStyleSheet("");  // remet tout par défaut
+        // dans le if (m_darkMode)
+        for (int i = 0; i < 6; i++)
+            m_barres[i]->setStyleSheet("background-color: #222; border-radius: 5px;");
+
+        for (auto *b : m_btnLaser) b->setStyleSheet(
+                "QPushButton { background-color: #333; border-radius: 8px; color: #aaa; }"
+
+                );
+    }
+    else
+    {
+        qApp->setStyleSheet(
+            "QWidget { background-color: #f0f0f0; color: #111111; }"
+            "QMenuBar { background-color: #e0e0e0; }"
+            "QMenu { background-color: #e0e0e0; }"
+            "QListWidget { background-color: #ffffff; color: #111111; }"
+
+
+            );
+        for (auto *b : m_barres)   b->setStyleSheet("background-color: #d0d0d0; border-radius: 5px;");
+        for (auto *b : m_btnLaser) b->setStyleSheet(
+                "QPushButton { background-color: #e0e0e0; border-radius: 8px; color: #111; }"
+
+                );
+    }
+}
 void MainWindow::toggleTouche(int noteMidi)
 {
     int noteId = 0;
@@ -759,8 +848,10 @@ void MainWindow::allumerBarre(int id)
 
 void MainWindow::eteindreBarre(int id)
 {
-    m_barres[id]->setStyleSheet(
-        "background-color: #222; border-radius: 5px;");
+
+    QString couleur = m_darkMode ? "#222" : "#d0d0d0";
+    m_barres[id]->setStyleSheet(QString("background-color: %1; border-radius: 5px;").arg(couleur));
+
     resetStylePiano();
 }
 

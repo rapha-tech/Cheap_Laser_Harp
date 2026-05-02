@@ -17,6 +17,7 @@
 #include "EngineLaser.h"
 #include "configFile.h"
 #include "RecentFiles.h"
+#include "qscrollarea.h"
 
 #define NOTES_OCTAVE 12
 #define NOTES_DISPLAYED 24
@@ -67,9 +68,17 @@ private slots:
     void updateLatestConfigs();
     void saveConfig();
     void saveConfigAs();
+    void resizeEvent(QResizeEvent *event);
 
 private:
     void resetStylePiano();
+
+    bool m_darkMode = true;
+    void applyTheme();
+    QWidget     *leftPanel;
+    QScrollArea *pianoScroll;
+    QWidget     *pianoCanvas;
+
 
     QString m_configPath;
     QString m_soundFontPath;
