@@ -10,6 +10,7 @@ class RecentFiles
 private:
     QStringList m_ListSoundFonts;
     QStringList m_ListConfigs;
+    unsigned int m_DarkMode;
 
     char** m_pointers;
     unsigned int m_idPointer;
@@ -25,9 +26,11 @@ public:
 
     QStringList getListSoundFonts();
     QStringList getListConfigs();
+    unsigned int getDarkMode();
 
     void addListConfigs(QString& QStr);
     void addListSoundFonts(QString& QStr);
+    void setDarkMode(unsigned int);
 };
 
 #endif // RECENTFILES_H

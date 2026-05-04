@@ -20,6 +20,7 @@
 #include <QList>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QApplication>
 
 // command to make executable D:\Qt\6.11.0\mingw_64\bin\windeployqt D:\Cheap_Laser_Harp\IHM_instrument_laser\build\Desktop_Qt_6_11_0_MinGW_64_bit-Release\release
 
@@ -216,14 +217,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(actionAfficherNotes, &QAction::triggered, this, [=]() {
         toggleNotes();
     });
-    // TODO : make function
 
-    QAction *actionTheme = mAffichage->addAction("&[TODO]Changer de thème");
-    // TODO : make function
-
+    m_actionTheme = mAffichage->addAction(m_darkMode ? "&Passer en mode clair" : "&Passer en mode sombre");
+    connect(m_actionTheme, &QAction::triggered, this, [=]() {
+        m_darkMode = !m_darkMode;
+        applyTheme();
+        m_recentFiles->write();
+    });
 
     QMenu *mAide = menuBar()->addMenu("&Aide");
-
     connect(mAide->addAction("&A propos"), &QAction::triggered, this, [=]() {
         QMessageBox about(this);
         about.setWindowTitle("A propos");
@@ -261,7 +263,7 @@ MainWindow::MainWindow(QWidget *parent)
     root->setContentsMargins(8, 8, 8, 8);
     root->setSpacing(10);
 
-leftPanel   = new QWidget();
+    leftPanel   = new QWidget();
     leftPanel->setMinimumWidth(160);
     QVBoxLayout *left = new QVBoxLayout(leftPanel);
     left->setContentsMargins(0, 0, 0, 0);
@@ -394,13 +396,13 @@ leftPanel   = new QWidget();
 
     const int TOTAL_WIDTH = whiteKeyCount * (WHITE_KEY_WIDTH + WHITE_KEY_SPACING);
 
-pianoScroll = new QScrollArea();
+    pianoScroll = new QScrollArea();
     pianoScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     pianoScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     pianoScroll->setWidgetResizable(false);
     pianoScroll->setFrameShape(QFrame::NoFrame);
 
-pianoCanvas = new QWidget();
+    pianoCanvas = new QWidget();
     pianoCanvas->setMinimumSize(TOTAL_WIDTH, PIANO_HEIGHT);
     pianoScroll->setMinimumHeight(PIANO_HEIGHT + 18);
 
@@ -512,16 +514,12 @@ pianoCanvas = new QWidget();
         loadConfig(recentConfigs[0]);
     }
 
+    m_darkMode = m_recentFiles->getDarkMode();
+    applyTheme();
 
     QTimer::singleShot(0, [=]() {
         QScrollBar *hbar = pianoScroll->horizontalScrollBar();
         hbar->setValue((hbar->minimum() + hbar->maximum()) / 2);
-    });
-
-    connect(actionTheme, &QAction::triggered, this, [=]() {
-        m_darkMode = !m_darkMode;
-        actionTheme->setText(m_darkMode ? "&Passer en mode clair" : "&Passer en mode sombre");
-        applyTheme();
     });
 }
 
@@ -694,10 +692,11 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     int totalWidth = m_touchesBlanches.size() * (ww + 1);
     pianoCanvas->setFixedSize(totalWidth, pianoH - 18);
 }
-#include <QApplication>
 
 void MainWindow::applyTheme()
 {
+    m_actionTheme->setText(m_darkMode ? "&Passer en mode clair" : "&Passer en mode sombre");
+
     if (m_darkMode)
     {
         qApp->setStyleSheet("");  // remet tout par défaut
@@ -707,7 +706,6 @@ void MainWindow::applyTheme()
 
         for (auto *b : m_btnLaser) b->setStyleSheet(
                 "QPushButton { background-color: #333; border-radius: 8px; color: #aaa; }"
-
                 );
     }
     else
@@ -717,15 +715,14 @@ void MainWindow::applyTheme()
             "QMenuBar { background-color: #e0e0e0; }"
             "QMenu { background-color: #e0e0e0; }"
             "QListWidget { background-color: #ffffff; color: #111111; }"
-
-
             );
+
         for (auto *b : m_barres)   b->setStyleSheet("background-color: #d0d0d0; border-radius: 5px;");
         for (auto *b : m_btnLaser) b->setStyleSheet(
                 "QPushButton { background-color: #e0e0e0; border-radius: 8px; color: #111; }"
-
                 );
     }
+    m_recentFiles->setDarkMode(m_darkMode);
 }
 void MainWindow::toggleTouche(int noteMidi)
 {

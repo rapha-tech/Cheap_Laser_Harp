@@ -13,11 +13,11 @@
 #include <QAction>
 #include <QListWidget>
 #include <QKeyEvent>
+#include <QScrollArea>
 
 #include "EngineLaser.h"
 #include "configFile.h"
 #include "RecentFiles.h"
-#include "qscrollarea.h"
 
 #define NOTES_OCTAVE 12
 #define NOTES_DISPLAYED 24
@@ -92,6 +92,7 @@ private:
     QSlider *sliderVol;
 
     QStringList m_listePortsMidi;
+    QAction *m_actionTheme;
 
     QVector<QFrame*> m_barres;
     QVector<QPushButton*> m_btnLaser;

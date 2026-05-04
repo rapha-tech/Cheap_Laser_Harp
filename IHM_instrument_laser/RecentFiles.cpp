@@ -3,6 +3,7 @@
 //     {
 //        "ListSoundFonts":["Florestan.sf2", "SoundFont.sf2"],
 //        "ListConfigs":["config.json", "piano.json", "musique1.json"],
+//        "DarkMode":0
 //     }
 
 #include <QDebug>
@@ -14,6 +15,7 @@ RecentFiles::RecentFiles()
     // Default values if no file is found
     m_ListSoundFonts = QStringList();
     m_ListConfigs = QStringList();
+    m_DarkMode = 1;
 
     // Read the JSON file
     yyjson_doc *doc = yyjson_read_file(RECENT_FILES_PATH, 0, NULL, NULL);
@@ -25,6 +27,7 @@ RecentFiles::RecentFiles()
         yyjson_obj_iter iter;
         yyjson_obj_iter_init(obj, &iter);
         yyjson_val *key;
+        yyjson_val *val;
         while ((key = yyjson_obj_iter_next(&iter)))
         {
             if(!strcmp(yyjson_get_str(key), "ListSoundFonts"))
@@ -34,6 +37,11 @@ RecentFiles::RecentFiles()
             else if(!strcmp(yyjson_get_str(key), "ListConfigs"))
             {
                 setListJson(key, m_ListConfigs);
+            }
+            else if(!strcmp(yyjson_get_str(key), "DarkMode"))
+            {
+                val = yyjson_obj_iter_get_val(key);
+                m_DarkMode = yyjson_get_uint(val);
             }
         }
     }
@@ -82,6 +90,9 @@ void RecentFiles::write()
     yyjson_mut_obj_add(root, yyjson_mut_str(doc, "ListSoundFonts"), ListSoundFonts_arr);
     yyjson_mut_obj_add(root, yyjson_mut_str(doc, "ListConfigs"), ListConfigs_arr);
 
+    yyjson_mut_val *num = yyjson_mut_int(doc, m_DarkMode);
+    yyjson_mut_obj_add(root, yyjson_mut_str(doc, "DarkMode"), num);
+
     // Set the document's root value.
     yyjson_mut_doc_set_root(doc, root);
 
@@ -121,6 +132,11 @@ QStringList RecentFiles::getListConfigs()
 QStringList RecentFiles::getListSoundFonts()
 {
     return m_ListSoundFonts;
+}
+
+unsigned int RecentFiles::getDarkMode()
+{
+    return m_DarkMode;
 }
 
 void RecentFiles::addListConfigs(QString& QStr)
@@ -163,4 +179,9 @@ void RecentFiles::addQStringList(QStringList& QStrList, QString& QStr)
         QStrList = TempList;
         qDebug() << "RecentFile : place Qstr on top :" << QStr;
     }
+}
+
+void RecentFiles::setDarkMode(unsigned int DarkMode)
+{
+    m_DarkMode = DarkMode;
 }
