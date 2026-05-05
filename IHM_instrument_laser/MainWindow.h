@@ -50,6 +50,8 @@ private slots:
     void stopperLaser(int id);
     void allumerBarre(int id);
     void eteindreBarre(int id);
+    void allumerTouche(int noteMidi);
+    void eteindreTouche(int noteMidi);
     void toggleAssignation(int id);
     void toggleTouche(int noteMidi);
     void toggleNotes();

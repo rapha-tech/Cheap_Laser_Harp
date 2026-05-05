@@ -53,6 +53,7 @@ public:
 
 signals:
     void noteRecueMidi(int note, bool active);
+    void toucheRecueMidi(int note, bool active);
 
 private:
 

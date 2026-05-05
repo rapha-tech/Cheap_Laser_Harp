@@ -480,7 +480,7 @@ MainWindow::MainWindow(QWidget *parent)
         setVolume(val, false);
     });
 
-    connect(m_engine, &EngineLaser::noteRecueMidi,
+    connect(m_engine, &EngineLaser::toucheRecueMidi,
             this, [=](int index_touche, bool active) {
                 if (active)
                 {
@@ -491,6 +491,18 @@ MainWindow::MainWindow(QWidget *parent)
                 {
                     eteindreBarre(index_touche);
                     m_btnLaser[index_touche]->setIcon(QIcon());
+                }
+            });
+
+    connect(m_engine, &EngineLaser::noteRecueMidi,
+            this, [=](int index_touche, bool active) {
+                if (active)
+                {
+                    allumerTouche(index_touche);
+                }
+                else
+                {
+                    eteindreTouche(index_touche);
                 }
             });
 
@@ -704,8 +716,11 @@ void MainWindow::applyTheme()
         for (int i = 0; i < 6; i++)
             m_barres[i]->setStyleSheet("background-color: #222; border-radius: 5px;");
 
-        for (auto *b : m_btnLaser) b->setStyleSheet(
+        for (auto *b : m_btnLaser)
+            b->setStyleSheet(
                 "QPushButton { background-color: #333; border-radius: 8px; color: #aaa; }"
+                "QPushButton:hover { background-color: #444;}"
+                "QPushButton:pressed { background-color: #ff00ff;}"
                 );
     }
     else
@@ -718,8 +733,11 @@ void MainWindow::applyTheme()
             );
 
         for (auto *b : m_barres)   b->setStyleSheet("background-color: #d0d0d0; border-radius: 5px;");
-        for (auto *b : m_btnLaser) b->setStyleSheet(
+        for (auto *b : m_btnLaser)
+            b->setStyleSheet(
                 "QPushButton { background-color: #e0e0e0; border-radius: 8px; color: #111; }"
+                "QPushButton:hover { background-color: #acacac;}"
+                "QPushButton:pressed { background-color: #ff00ff;}"
                 );
     }
     m_recentFiles->setDarkMode(m_darkMode);
@@ -824,32 +842,54 @@ void MainWindow::allumerBarre(int id)
     {
 
         int noteMidi = m_accords[id].notes[i];
-        int noteId = 0;
-
-        if (IS_NOIRE[noteMidi % 12])
-        {
-            noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[noteMidi];
-            m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_PLAY);
-        }
-        else
-        {
-            noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[noteMidi];
-            m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_PLAY);
-        }
+        allumerTouche(noteMidi);
     }
 
-
-    m_barres[id]->setStyleSheet(
-        "background-color: #ff00ff; border-radius: 5px;");
+    m_barres[id]->setStyleSheet("background-color: #ff00ff; border-radius: 5px;");
 }
 
 void MainWindow::eteindreBarre(int id)
 {
+    for(int i = 0; i < m_accords[id].n_notes; i++)
+    {
+
+        int noteMidi = m_accords[id].notes[i];
+        eteindreTouche(noteMidi);
+        
+    }
 
     QString couleur = m_darkMode ? "#222" : "#d0d0d0";
     m_barres[id]->setStyleSheet(QString("background-color: %1; border-radius: 5px;").arg(couleur));
+}
 
-    resetStylePiano();
+void MainWindow::allumerTouche(int noteMidi)
+{
+    int noteId = 0;
+    if (IS_NOIRE[noteMidi % 12])
+    {
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[noteMidi];
+        m_touchesNoires[noteId]->setStyleSheet(S_NOIRE_PLAY);
+    }
+    else
+    {
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[noteMidi];
+        m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE_PLAY);
+    }
+}
+
+void MainWindow::eteindreTouche(int noteMidi)
+{
+    int noteId = 0;
+    if (IS_NOIRE[noteMidi % 12])
+    {
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_NOIRE[noteMidi];
+        m_touchesNoires[noteId]->setStyleSheet(S_NOIRE);
+    }
+    else
+    {
+        noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[noteMidi];
+        m_touchesBlanches[noteId]->setStyleSheet(S_BLANCHE);
+    }
 }
 
 // ─────────────────────────────────────────────

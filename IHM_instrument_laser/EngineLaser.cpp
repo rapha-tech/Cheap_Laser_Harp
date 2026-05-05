@@ -307,27 +307,46 @@ void EngineLaser::midiCallback(double /*dt*/,
 
     unsigned char status = msg->at(0);
     int index_touche     = msg->at(1);
+    
+
     int velocity = msg->at(2);
 
     if (status == 0x90 && velocity > 0)
     {
         ma_mutex_lock(&self->m_mutex);
-        for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
+        if(index_touche < 6)
         {
-            tsf_note_on(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i], self->m_volume);
+            for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
+            {
+                tsf_note_on(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i], self->m_volume);
+            }
+            emit self->toucheRecueMidi(index_touche, true);
         }
+        else
+        {
+            tsf_note_on(self->m_tsf, self->m_instrument, index_touche, self->m_volume);
+            emit self->noteRecueMidi(index_touche, true);
+        }
+        
         ma_mutex_unlock(&self->m_mutex);
-        emit self->noteRecueMidi(index_touche, true);
     }
     else if (status == 0x80 || (status == 0x90 && velocity == 0))
     {
         ma_mutex_lock(&self->m_mutex);
-        for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
+        if(index_touche < 6)
         {
-            tsf_note_off(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i]);
+            for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
+            {
+                tsf_note_off(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i]);
+            }
+            emit self->toucheRecueMidi(index_touche, false);
+        }
+        else
+        {
+            tsf_note_off(self->m_tsf, self->m_instrument, index_touche);
+            emit self->noteRecueMidi(index_touche, false);
         }
         ma_mutex_unlock(&self->m_mutex);
-        emit self->noteRecueMidi(index_touche, false);
     }
 }
 
