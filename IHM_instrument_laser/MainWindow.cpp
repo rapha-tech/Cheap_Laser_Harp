@@ -173,14 +173,13 @@ MainWindow::MainWindow(QWidget *parent)
     mListePeripheriques = new QMenu("&Périphérique Midi entrant");
     mInstrument->addMenu(mListePeripheriques);
     menuBar()->addMenu(mInstrument);
-    // this action is used to update the list of available Midi ports when the menu bar is triggered
-    connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
-        updatePorts();
-    });
 
     mListeAudioOut = new QMenu("&Sortie Audio");
     mInstrument->addMenu(mListeAudioOut);
+
+    // this action is used to update the list of available Midi ports and Audio outputs when the menu bar is triggered
     connect(mInstrument, &QMenu::aboutToShow, this, [=]() {
+        updatePorts();
         updateAudioOuts();
     });
 
@@ -312,7 +311,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_btnLaser.resize(6);
     m_btnAssign.resize(6);
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 6; i++)
+    {
         QWidget *col = new QWidget();
         QVBoxLayout *colL = new QVBoxLayout(col);
         colL->setContentsMargins(3, 0, 3, 0);
@@ -893,9 +893,9 @@ void MainWindow::eteindreTouche(int noteMidi)
 }
 
 // ─────────────────────────────────────────────
-void MainWindow::fermer() {
-    if (QMessageBox::warning(this, "Quitter", "Fermer l'application ?", QMessageBox:: Yes | QMessageBox:: No)
-        == QMessageBox::Yes)
+void MainWindow::fermer()
+{
+    if (QMessageBox::warning(this, "Quitter", "Fermer l'application ?", QMessageBox:: Yes | QMessageBox:: No) == QMessageBox::Yes)
     {
         m_configFile->write(m_configPath);
 

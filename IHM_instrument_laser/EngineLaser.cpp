@@ -15,29 +15,36 @@ EngineLaser::EngineLaser(QObject *parent) : QObject(parent)
 EngineLaser::~EngineLaser()
 {
     stopMidi();
-    if (m_audioOk) {
+    if (m_audioOk)
+    {
         ma_device_uninit(&m_device);
         ma_mutex_uninit(&m_mutex);
     }
     if (m_tsf)
+    {
+        tsf_note_off_all(m_tsf);
         tsf_close(m_tsf);
+    }
 }
 
 bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
 {
-    if (m_audioOk) {
+    if (m_audioOk)
+    {
         ma_device_uninit(&m_device);
         ma_mutex_uninit(&m_mutex);
         m_audioOk = false;
     }
+
     if (m_tsf)
+    {
+        tsf_note_off_all(m_tsf);
         tsf_close(m_tsf);
+    }
 
     ma_result result = ma_context_init(NULL, 0, NULL, &m_context);
     if (result != MA_SUCCESS)
-    {
         return 0;
-    }
 
     ma_device_info* pPlaybackDeviceInfos;
     ma_uint32 playbackDeviceCount;
@@ -48,7 +55,7 @@ bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
         return 0;
     }
 
-    if(idAudioOut == -1 || idAudioOut >= playbackDeviceCount)
+    if(idAudioOut == -1 || idAudioOut >= (int)playbackDeviceCount)
     {
         idAudioOut = 0;
         for (ma_uint32  iDevice = 0; iDevice < playbackDeviceCount; ++iDevice)
@@ -60,6 +67,10 @@ bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.pDeviceID       = &pPlaybackDeviceInfos[idAudioOut].id;
+#ifdef _WIN32 // exclusive mode is compatible on Windows but not linux
+    // TODO : add toggle "performance mode"
+    config.playback.shareMode       = ma_share_mode_exclusive;
+#endif
     config.playback.format          = ma_format_f32;
     config.playback.channels        = 2;
     config.sampleRate               = 44100;
@@ -78,10 +89,11 @@ bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
 
     ma_mutex_init(&m_mutex);
 
-    // ── Charger le SoundFont ──
+    // TODO : since this can take quite some time it would be nice to let the user know the SoundFont is being loaded
     m_tsf = tsf_load_filename(soundFontPath.toLocal8Bit().constData());
 
-    if (!m_tsf) {
+    if (!m_tsf)
+    {
         qWarning() << "EngineLaser: SoundFont introuvable !";
         ma_device_uninit(&m_device);
         ma_mutex_uninit(&m_mutex);
@@ -89,7 +101,8 @@ bool EngineLaser::initEngine(QString& soundFontPath, int idAudioOut)
         return 0;
     }
 
-    if (ma_device_start(&m_device) != MA_SUCCESS) {
+    if (ma_device_start(&m_device) != MA_SUCCESS)
+    {
         qWarning() << "EngineLaser: impossible de démarrer la lecture";
         ma_device_uninit(&m_device);
         ma_mutex_uninit(&m_mutex);
@@ -154,9 +167,7 @@ void EngineLaser::jouerLaser(int laserId)
     if (!m_audioOk || !m_tsf) return;
     ma_mutex_lock(&m_mutex);
     for(int i = 0; i < m_accords[laserId].n_notes; i++)
-    {
         tsf_note_on(m_tsf, m_instrument, m_accords[laserId].notes[i], m_volume);
-    }
     ma_mutex_unlock(&m_mutex);
 }
 
@@ -165,9 +176,7 @@ void EngineLaser::stopperLaser(int laserId)
     if (!m_audioOk || !m_tsf) return;
     ma_mutex_lock(&m_mutex);
     for(int i = 0; i < m_accords[laserId].n_notes; i++)
-    {
         tsf_note_off(m_tsf, m_instrument, m_accords[laserId].notes[i]);
-    }
     ma_mutex_unlock(&m_mutex);
 }
 
@@ -205,7 +214,8 @@ bool EngineLaser::initMidi(QString& midi_port_name)
     try {
         m_midiIn = new RtMidiIn();
         unsigned int nPorts = m_midiIn->getPortCount();
-        if (nPorts == 0) {
+        if (nPorts == 0)
+        {
             qWarning() << "EngineLaser : Aucun port MIDI disponible";
             delete m_midiIn;
             m_midiIn = nullptr;
@@ -265,9 +275,7 @@ QStringList EngineLaser::getAudioOuts()
 
     ma_result result = ma_context_init(NULL, 0, NULL, &m_context);
     if (result != MA_SUCCESS)
-    {
         return liste;
-    }
 
     ma_device_info* pPlaybackDeviceInfos;
     ma_uint32 playbackDeviceCount;
@@ -288,7 +296,8 @@ QStringList EngineLaser::getAudioOuts()
 
 void EngineLaser::stopMidi()
 {
-    if (m_midiIn) {
+    if (m_midiIn)
+    {
         m_midiIn->cancelCallback();
         m_midiIn->closePort();
         delete m_midiIn;
@@ -297,9 +306,7 @@ void EngineLaser::stopMidi()
     }
 }
 
-void EngineLaser::midiCallback(double /*dt*/,
-                               std::vector<unsigned char>* msg,
-                               void* userData)
+void EngineLaser::midiCallback(double /*dt*/, std::vector<unsigned char>* msg, void* userData)
 {
     EngineLaser *self = static_cast<EngineLaser*>(userData);
     if (!self || !self->m_tsf) return;
@@ -307,61 +314,47 @@ void EngineLaser::midiCallback(double /*dt*/,
 
     unsigned char status = msg->at(0);
     int index_touche     = msg->at(1);
-    
-
-    int velocity = msg->at(2);
+    int velocity         = msg->at(2);
 
     if (status == 0x90 && velocity > 0)
     {
-        ma_mutex_lock(&self->m_mutex);
         if(index_touche < 6)
         {
+            ma_mutex_lock(&self->m_mutex);
             for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
-            {
                 tsf_note_on(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i], self->m_volume);
-            }
+
+            ma_mutex_unlock(&self->m_mutex);
             emit self->toucheRecueMidi(index_touche, true);
         }
         else
         {
+            ma_mutex_lock(&self->m_mutex);
             tsf_note_on(self->m_tsf, self->m_instrument, index_touche, self->m_volume);
+            ma_mutex_unlock(&self->m_mutex);
             emit self->noteRecueMidi(index_touche, true);
         }
-        
-        ma_mutex_unlock(&self->m_mutex);
     }
     else if (status == 0x80 || (status == 0x90 && velocity == 0))
     {
-        ma_mutex_lock(&self->m_mutex);
         if(index_touche < 6)
         {
+            ma_mutex_lock(&self->m_mutex);
             for(int i = 0; i < self->m_accords[index_touche].n_notes; i++)
-            {
                 tsf_note_off(self->m_tsf, self->m_instrument, self->m_accords[index_touche].notes[i]);
-            }
+
+            ma_mutex_unlock(&self->m_mutex);
             emit self->toucheRecueMidi(index_touche, false);
         }
         else
         {
+            ma_mutex_lock(&self->m_mutex);
             tsf_note_off(self->m_tsf, self->m_instrument, index_touche);
+            ma_mutex_unlock(&self->m_mutex);
             emit self->noteRecueMidi(index_touche, false);
         }
-        ma_mutex_unlock(&self->m_mutex);
-    }
-}
 
-void EngineLaser::loadSoundFont(QString& fileName)
-{
-    tsf_close(m_tsf); // Free the memory used by the current SoundFont
-    m_tsf = tsf_load_filename(fileName.toLocal8Bit().constData());
-    if (!m_tsf)
-    {
-        qWarning() << "EngineLaser: SoundFont introuvable !";
-        return;
     }
-
-    qDebug() << "EngineLaser : loaded SoundFont : " << fileName;
-    tsf_set_output(m_tsf, TSF_STEREO_INTERLEAVED, 44100, 0);
 }
 
 accord_t* EngineLaser::getAccords()
@@ -371,9 +364,7 @@ accord_t* EngineLaser::getAccords()
     {
         accordcpy[i].n_notes = m_accords[i].n_notes;
         for(int j = 0; j < m_accords[i].n_notes; j++)
-        {
             accordcpy[i].notes[j] = m_accords[i].notes[j];
-        }
     }
     qDebug() << "EngineLaser : get accords";
     return accordcpy;
@@ -392,9 +383,7 @@ void EngineLaser::setAccords(accord_t* accordcpy)
     {
         m_accords[i].n_notes = accordcpy[i].n_notes;
         for(int j = 0; j < accordcpy[i].n_notes; j++)
-        {
             m_accords[i].notes[j] = accordcpy[i].notes[j];
-        }
     }
     qDebug() << "EngineLaser : accords set";
 }
