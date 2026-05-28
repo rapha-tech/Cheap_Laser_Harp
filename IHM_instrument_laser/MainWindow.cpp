@@ -386,8 +386,8 @@ MainWindow::MainWindow(QWidget *parent)
     const int WHITE_KEY_WIDTH = 28;
     const int WHITE_KEY_SPACING = 1;
     const int BLACK_KEY_WIDTH = 18;
-    const int BLACK_KEY_HEIGHT = 75;
-    const int PIANO_HEIGHT = 120;
+    const int BLACK_KEY_HEIGHT = 85;
+    const int PIANO_HEIGHT = 150;
 
     // Count white keys to compute total width
     int whiteKeyCount = 0;
@@ -675,7 +675,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         b->setMinimumHeight(h * 0.04);
 
     // blanche
-    int ww = 36;
+    int ww = 38;
     for (auto *b : m_touchesBlanches)
         b->setFixedWidth(ww);
 
