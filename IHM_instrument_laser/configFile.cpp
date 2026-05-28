@@ -99,9 +99,8 @@ void configFile::setAccordJson(yyjson_val* key, accord_t* accords, int id_laser)
     yyjson_arr_iter iter = yyjson_arr_iter_with(arr);
     int i = 0;
     while ((val = yyjson_arr_iter_next(&iter)))
-    {
         accords[id_laser].notes[i++] = yyjson_get_uint(val);
-    }
+
     accords[id_laser].n_notes = i;
 }
 
@@ -201,9 +200,7 @@ accord_t* configFile::getAccords()
     {
         accordcpy[i].n_notes = m_accords[i].n_notes;
         for(int j = 0; j < m_accords[i].n_notes; j++)
-        {
             accordcpy[i].notes[j] = m_accords[i].notes[j];
-        }
     }
     return accordcpy;
 }
@@ -251,8 +248,6 @@ void configFile::set_accords(accord_t* accordcpy)
     {
         m_accords[i].n_notes = accordcpy[i].n_notes;
         for(int j = 0; j < accordcpy[i].n_notes; j++)
-        {
             m_accords[i].notes[j] = accordcpy[i].notes[j];
-        }
     }
 }

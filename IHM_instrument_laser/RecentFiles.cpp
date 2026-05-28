@@ -104,9 +104,8 @@ void RecentFiles::write()
     yyjson_mut_doc_free(doc);
 
     for(unsigned int i = 0; i < Npointers; i++)
-    {
         delete m_pointers[i];
-    }
+
     delete[] m_pointers;
 }
 
@@ -159,9 +158,8 @@ void RecentFiles::addQStringList(QStringList& QStrList, QString& QStr)
 
         TempList.append(QStr);
         for(int i = 0; i < QStrList.count(); i++)
-        {
             TempList.append(QStrList[i]);
-        }
+
         QStrList = TempList;
         qDebug() << "RecentFile : add Qstr :" << QStr;
     }
