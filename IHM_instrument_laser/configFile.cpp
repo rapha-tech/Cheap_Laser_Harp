@@ -100,6 +100,7 @@ void configFile::setAccordJson(yyjson_val* key, accord_t* accords, int id_laser)
     int i = 0;
     while ((val = yyjson_arr_iter_next(&iter)))
         accords[id_laser].notes[i++] = yyjson_get_uint(val);
+
     accords[id_laser].n_notes = i;
 }
 

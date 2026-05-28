@@ -222,21 +222,21 @@ bool EngineLaser::initMidi(QString& midi_port_name)
             return false;
         }
 
-        int id = 0; // fallback to port 0 if the requested port name isn't available (example : config file loading)
         for(unsigned int i = 0; i < nPorts; i++)
         {
             if(QString::fromStdString(m_midiIn->getPortName(i)) == midi_port_name)
             {
-                id = i;
-                break;
+                m_midiIn->openPort(i);
+                m_midiIn->setCallback(&EngineLaser::midiCallback, this);
+                m_midiIn->ignoreTypes(false, false, false);
+                qDebug() << "EngineLaser : MIDI ouvert:" << QString::fromStdString(m_midiIn->getPortName(i));
+                return true;
             }
         }
 
-        m_midiIn->openPort(id);
-        m_midiIn->setCallback(&EngineLaser::midiCallback, this);
-        m_midiIn->ignoreTypes(false, false, false);
-        qDebug() << "EngineLaser : MIDI ouvert:" << QString::fromStdString(m_midiIn->getPortName(id));
-        return true;
+        delete m_midiIn;
+        m_midiIn = nullptr;
+        return false;
 
     } catch (RtMidiError &e) {
         qWarning() << "EngineLaser : Erreur MIDI:" << QString::fromStdString(e.getMessage());

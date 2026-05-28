@@ -906,14 +906,16 @@ void MainWindow::fermer()
     }
 }
 
-void MainWindow::nouveau() {
+void MainWindow::nouveau()
+{
     MainWindow *newWindow = new MainWindow();
     newWindow->show();
 
     //this->close();
 }
 
-void MainWindow::actif() {
+void MainWindow::actif()
+{
     this->show();
 }
 
