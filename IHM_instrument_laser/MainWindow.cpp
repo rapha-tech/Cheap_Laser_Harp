@@ -36,7 +36,7 @@ static const QString S_BLANCHE =
     "  color: black;"
     "  text-align: bottom center;"
     "  padding-bottom: 20px;"
-    "  font-size: 9px;"
+    "  font-size: 13px;"
     "}"
     "QPushButton:hover {"
     "  background-color: #D0D0D0;"
@@ -51,7 +51,7 @@ static const QString S_BLANCHE_SEL =
     "  color: black;"
     "  text-align: bottom center;"
     "  padding-bottom: 20px;"
-    "  font-size: 9px;"
+    "  font-size: 13px;"
     "}";
 
 static const QString S_BLANCHE_PLAY =
@@ -61,7 +61,7 @@ static const QString S_BLANCHE_PLAY =
     "  color: black;"
     "  text-align: bottom center;"
     "  padding-bottom: 20px;"
-    "  font-size: 9px;"
+    "  font-size: 13px;"
     "}";
 
 static const QString S_NOIRE =
@@ -73,13 +73,13 @@ static const QString S_NOIRE =
     "  border-bottom: 1px solid #000;"
     "  border-top: none;"
     "}"
-                           "QPushButton:hover {"
-                           "  background-color: #333333;"
-                           "}"
-                           "QPushButton:pressed {"
-                           "  background-color: #000000;"
-                           "  border: 2px solid #888888;"
-                           "}";
+    "QPushButton:hover {"
+    "  background-color: #333333;"
+    "}"
+    "QPushButton:pressed {"
+    "  background-color: #000000;"
+    "  border: 2px solid #888888;"
+    "}";
 
 static const QString S_NOIRE_SEL =
     "QPushButton {"
@@ -620,14 +620,12 @@ void MainWindow::toggleNotes()
     if(m_touchesBlanches[0]->text() == "")
     {
         int noteId = 0;
-
         for(int i = 0; i < NOTES_TOTAL; i++)
         {
             if(!IS_NOIRE[i % 12])
             {
                 noteId = NOTE_MIDI_TO_ID_TOUCHE_BLANCHE[i + DEFAULT_OCTAVE];
                 m_touchesBlanches[noteId]->setText(NOTES_NAMES[i % 12]);
-
             }
         }
     }
@@ -676,17 +674,13 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     for (auto *b : m_btnAssign)
         b->setMinimumHeight(h * 0.04);
 
-    int pianoH = h * 0.30;
-    pianoScroll->setFixedHeight(pianoH);
-
     // blanche
-    int ww = qMax(10, (pianoCanvas->width() / m_touchesBlanches.size()) - 1);
+    int ww = 36;
     for (auto *b : m_touchesBlanches)
         b->setFixedWidth(ww);
 
     // noire
     int bw = ww * 0.65;
-    int bh = (pianoH - 18) * 0.62;
     int whiteIndex = 0;
     int noireIdx = 0;
     for (int i = 0; i < NOTES_TOTAL; i++)
@@ -696,13 +690,17 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         else
         {
             int x = whiteIndex * (ww + 1) - bw / 2;
-            m_touchesNoires[noireIdx]->setFixedSize(bw, bh);
+            m_touchesNoires[noireIdx]->setFixedWidth(bw);
             m_touchesNoires[noireIdx]->move(x, 0);
             noireIdx++;
         }
     }
     int totalWidth = m_touchesBlanches.size() * (ww + 1);
-    pianoCanvas->setFixedSize(totalWidth, pianoH - 18);
+    pianoCanvas->setFixedWidth(totalWidth);
+
+    // put scroll bar in the middle
+    QScrollBar *hbar = pianoScroll->horizontalScrollBar();
+    hbar->setValue((hbar->minimum() + hbar->maximum()) / 2);
 }
 
 void MainWindow::applyTheme()
